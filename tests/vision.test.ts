@@ -58,6 +58,38 @@ describe('vision', () => {
       // End should be the cloud entry point (closer than wall)
       expect(distance(line.end, { x: 3, y: 0 })).toBeLessThan(EPS * 100);
     });
+
+    it('returns end on the wall when blocked by a wall, not at to', () => {
+      const walls = [
+        { a: { x: 5, y: -10 }, b: { x: 5, y: 10 } },
+      ];
+      const line = sightLine({ x: 0, y: 0 }, { x: 10, y: 0 }, walls, []);
+      expect(line.state).toBe('wall');
+      // End should be on the wall at (5, 0), not at to (10, 0)
+      expect(distance(line.end, { x: 5, y: 0 })).toBeLessThan(EPS * 100);
+      expect(distance(line.end, { x: 10, y: 0 })).toBeGreaterThan(1);
+    });
+
+    it('returns open when a short wall is beside the line', () => {
+      // Wall from (5, 2) to (5, 4) — line from (0,0) to (10,0) passes below it
+      const walls = [
+        { a: { x: 5, y: 2 }, b: { x: 5, y: 4 } },
+      ];
+      const line = sightLine({ x: 0, y: 0 }, { x: 10, y: 0 }, walls, []);
+      expect(line.state).toBe('open');
+    });
+
+    it('returns open for a sample point lying exactly on a wall, seen from the open side', () => {
+      // Wall at x=5, sample point is at (5, 0) which is on the wall
+      // Watcher at (0, 0) looking at (5, 0) — the line ends at the wall point
+      const walls = [
+        { a: { x: 5, y: -10 }, b: { x: 5, y: 10 } },
+      ];
+      const line = sightLine({ x: 0, y: 0 }, { x: 5, y: 0 }, walls, []);
+      // The sample point sits on the wall, but with dist - EPS the ray should not
+      // count the wall as blocking — the line is 'open'
+      expect(line.state).toBe('open');
+    });
   });
 
   describe('computeCoverage', () => {

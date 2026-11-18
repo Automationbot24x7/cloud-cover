@@ -162,6 +162,29 @@ describe('geom', () => {
       expect(hit2).not.toBeNull();
       expect(hit2!.normal.x).toBeCloseTo(1);
     });
+
+    it('misses a wall when the ray passes below the wall segment', () => {
+      // Wall from (100, 0) to (100, 50); ray from (0, 80) along +x must MISS
+      const wall = { a: { x: 100, y: 0 }, b: { x: 100, y: 50 } };
+      const hit = raycast({ x: 0, y: 80 }, { x: 1, y: 0 }, 200, [wall]);
+      expect(hit).toBeNull();
+    });
+
+    it('hits a wall when the ray passes through the segment', () => {
+      // Same wall; ray from (0, 25) along +x must HIT at (100, 25)
+      const wall = { a: { x: 100, y: 0 }, b: { x: 100, y: 50 } };
+      const hit = raycast({ x: 0, y: 25 }, { x: 1, y: 0 }, 200, [wall]);
+      expect(hit).not.toBeNull();
+      expect(hit!.point.x).toBeCloseTo(100);
+      expect(hit!.point.y).toBeCloseTo(25);
+    });
+
+    it('misses a horizontal wall when the ray passes beyond the segment', () => {
+      // Wall from (0, 100) to (300, 100); ray from (400, 0) along +y must MISS
+      const wall = { a: { x: 0, y: 100 }, b: { x: 300, y: 100 } };
+      const hit = raycast({ x: 400, y: 0 }, { x: 0, y: 1 }, 200, [wall]);
+      expect(hit).toBeNull();
+    });
   });
 
   describe('segmentCircleEntry', () => {

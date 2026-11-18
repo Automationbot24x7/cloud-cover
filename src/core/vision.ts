@@ -3,11 +3,10 @@ import {
   sub,
   normalize,
   distance,
-  length,
-  cross,
   lerp,
   EPS,
   segmentCircleEntry,
+  raycast,
 } from './geom';
 
 /**
@@ -40,15 +39,11 @@ export function sightLine(
     return { from, to, state: 'open', end: to };
   }
 
-  // Check wall intersections
-  let nearestWallDist = Infinity;
-  for (const wall of walls) {
-    const hitDist = segmentIntersectionDist(from, dir, dist, wall);
-    if (hitDist !== null && hitDist < nearestWallDist) {
-      nearestWallDist = hitDist;
-    }
-  }
-  const hasWall = nearestWallDist < Infinity;
+  // Check wall intersections using raycast
+  // Use dist - EPS so a sample point sitting exactly on a wall is not counted as hidden
+  const wallHit = raycast(from, dir, dist - EPS, walls);
+  const hasWall = wallHit !== null;
+  const nearestWallDist = wallHit !== null ? wallHit.distance : Infinity;
 
   // Check cloud intersections
   let nearestCloudDist = Infinity;
@@ -74,7 +69,8 @@ export function sightLine(
       // Cloud is in front of wall — end is cloud entry
       end = nearestCloudPoint(from, to, clouds);
     } else {
-      end = to;
+      // Wall is the nearest obstruction — end is the wall hit point
+      end = wallHit!.point; // safe: hasWall is true implies wallHit is not null
     }
   } else if (hasCloud) {
     state = 'cloud';
@@ -110,33 +106,6 @@ function nearestCloudPoint(
   }
 
   return best || to;
-}
-
-/**
- * Check if a ray from `origin` along `dir` intersects a segment within `maxDist`.
- * Returns the distance to the intersection point, or null if no intersection.
- */
-function segmentIntersectionDist(
-  origin: Vec,
-  dir: Vec,
-  maxDist: number,
-  wall: Segment
-): number | null {
-  const segDir = sub(wall.b, wall.a);
-  const segLen = length(segDir);
-  if (segLen < EPS) return null;
-
-  const denom = cross(dir, segDir);
-  if (Math.abs(denom) < EPS) return null;
-
-  const toWall = sub(wall.a, origin);
-  const t = cross(toWall, segDir) / denom;
-  const u = cross(toWall, dir) / denom;
-
-  if (t < EPS || t > maxDist + EPS) return null;
-  if (u < -EPS || u > segLen + EPS) return null;
-
-  return t;
 }
 
 /**

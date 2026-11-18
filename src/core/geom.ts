@@ -112,14 +112,15 @@ function raySegment(
 
   const toWall = sub(wall.a, origin);
   const t = cross(toWall, segDir) / denom; // ray param
-  const u = cross(toWall, dir) / denom;    // segment param (0..segLen)
+  const u = cross(toWall, dir) / denom;    // segment param (fraction 0..1)
 
   // Ray must go forward past epsilon
   if (t < EPS) return null;
   // Must be within maxDistance
   if (t > maxDistance) return null;
   // Intersection must be on the segment (inclusive of endpoints)
-  if (u < -EPS || u > segLen + EPS) return null;
+  // u is a fraction in [0, 1] because segDir is un-normalised in the cross product
+  if (u < -EPS || u > 1 + EPS) return null;
 
   const point = add(origin, scale(dir, t));
 
