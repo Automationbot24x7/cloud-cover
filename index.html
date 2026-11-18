@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#06122a" />
+    <title>Cloud Cover</title>
+    <meta name="description" content="A 90-second booth mini game: bank the smoke, hide the crossing, save the squad." />
+  </head>
+  <body>
+    <div id="stage">
+      <canvas id="world" aria-label="Game field"></canvas>
+
+      <div id="hud">
+        <header class="topbar">
+          <div class="brand">
+            <svg class="brand-mark" viewBox="0 0 64 40" aria-hidden="true">
+              <path
+                d="M17 36a13 13 0 0 1-1.6-25.9A17 17 0 0 1 48 13.2 11.5 11.5 0 0 1 49 36z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>CLOUD COVER</span>
+          </div>
+          <div class="round">
+            <div class="pips" id="pips"></div>
+            <div class="round-title" id="round-title"></div>
+          </div>
+          <div class="score">
+            <span class="score-label">SCORE</span>
+            <span class="score-value" id="score">0</span>
+          </div>
+        </header>
+        <div class="timer"><div class="timer-fill" id="timer-fill"></div></div>
+        <div class="hint" id="hint">AIM <i></i> HOLD TO POWER UP <i></i> RELEASE TO THROW</div>
+
+        <div class="banner" id="banner" hidden>
+          <div class="banner-kicker" id="banner-kicker">ROUND 1</div>
+          <div class="banner-title" id="banner-title">Open Gap</div>
+          <div class="banner-brief" id="banner-brief"></div>
+        </div>
+
+        <div class="toast" id="toast" hidden>
+          <div class="toast-grade" id="toast-grade">COVERED</div>
+          <div class="toast-row">
+            <span class="toast-percent" id="toast-percent">84%</span>
+            <span class="toast-sub">of sight lines blocked</span>
+          </div>
+          <div class="toast-row toast-points">
+            <span id="toast-points">+720</span>
+            <span class="toast-chips" id="toast-chips"></span>
+          </div>
+        </div>
+      </div>
+
+      <section class="overlay" id="attract">
+        <div class="attract-main">
+          <div class="kicker">90 SECONDS <i></i> 6 THROWS <i></i> 1 SQUAD</div>
+          <h1 class="title"><span>CLOUD</span><span>COVER</span></h1>
+          <p class="tagline">Bank the smoke. Hide the crossing. Save the squad.</p>
+          <ol class="steps">
+            <li><b>AIM</b><span>Point, hold to power up, release to throw.</span></li>
+            <li><b>BANK</b><span>Walls bounce it, like a pool ball.</span></li>
+            <li><b>COVER</b><span>Block every watcher's view of the crossing.</span></li>
+          </ol>
+          <button class="cta" id="play" type="button">CLICK TO PLAY</button>
+        </div>
+        <aside class="attract-board">
+          <h2>TODAY'S BEST</h2>
+          <ol class="board-list" id="attract-board"></ol>
+        </aside>
+      </section>
+
+      <section class="overlay" id="summary" hidden>
+        <div class="summary-card">
+          <div class="kicker" id="summary-kicker">RUN COMPLETE</div>
+          <div class="summary-rank" id="summary-rank">SMOKE PRO</div>
+          <div class="summary-stats">
+            <div class="stat">
+              <span class="stat-value" id="summary-score">0</span>
+              <span class="stat-label">POINTS</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="summary-saved">0/30</span>
+              <span class="stat-label">SQUAD SAVED</span>
+            </div>
+          </div>
+          <div class="summary-rounds" id="summary-rounds"></div>
+
+          <div class="entry" id="entry">
+            <div class="entry-label">ENTER YOUR TAG</div>
+            <div class="entry-slots" id="entry-slots"></div>
+            <div class="entry-keys" id="entry-keys"></div>
+            <button class="cta" id="save" type="button" disabled>SAVE SCORE</button>
+          </div>
+
+          <div class="saved" id="saved" hidden>
+            <div class="saved-rank" id="saved-rank">#1 TODAY</div>
+            <ol class="board-list" id="summary-board"></ol>
+            <button class="cta" id="again" type="button">NEXT PLAYER</button>
+            <div class="idle"><div class="idle-fill" id="idle-fill"></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

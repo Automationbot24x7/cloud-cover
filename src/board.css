@@ -1,0 +1,50 @@
+.board-page {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(120% 100% at 50% 0%, var(--navy-700), var(--navy-900));
+  font-family: var(--display);
+}
+
+.board-screen {
+  width: calc(var(--u) * 1600);
+  height: calc(var(--u) * 900);
+  padding: calc(var(--u) * 50) calc(var(--u) * 240) 0;
+}
+
+.board-screen h1 {
+  margin: calc(var(--u) * 4) 0 calc(var(--u) * 24);
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 92);
+  line-height: 1;
+}
+
+.board-screen h1 span {
+  color: transparent;
+  -webkit-text-stroke: calc(var(--u) * 2) var(--blue);
+}
+
+.board-list.big li {
+  font-size: calc(var(--u) * 40);
+  padding: calc(var(--u) * 7) calc(var(--u) * 22);
+  grid-template-columns: calc(var(--u) * 80) 1fr auto;
+}
+
+.board-list.big li.me {
+  animation: flash 1.2s ease 3;
+}
+
+@keyframes flash {
+  50% {
+    background: var(--mint);
+  }
+}
+
+#board-foot {
+  margin-top: calc(var(--u) * 18);
+  font-weight: 600;
+  font-size: calc(var(--u) * 20);
+  letter-spacing: 0.24em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
