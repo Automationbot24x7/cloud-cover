@@ -86,6 +86,8 @@ export interface GameState {
   chargeDir: 1 | -1;
   /** Where the canister would land if released now. */
   marker: Vec;
+  /** While charging: the sight lines as they would be with a cloud at `marker`. */
+  live: Coverage | null;
   timeLeft: number;
 
   thrown: ThrowResult | null;

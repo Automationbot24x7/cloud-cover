@@ -128,6 +128,7 @@ export function createGame(hooks: GameHooks = {}): Game {
     charge: THROW.minRange,
     chargeDir: 1,
     marker: { ...first.thrower },
+    live: null,
     timeLeft: 0,
     thrown: null,
     flightDuration: 0.4,
@@ -189,6 +190,7 @@ export function createGame(hooks: GameHooks = {}): Game {
     state.charging = false;
     state.charge = THROW.minRange;
     state.chargeDir = 1;
+    state.live = null;
     state.thrown = null;
     state.cloud = null;
     state.coverage = null;
@@ -295,6 +297,7 @@ export function createGame(hooks: GameHooks = {}): Game {
     if (state.phase !== 'aim') return;
     timeAtThrow = state.timeLeft;
     state.charging = false;
+    state.live = null;
     chargeTone.stop();
     state.thrown = computeThrow(state.level.thrower, aimPoint(range), state.walls, THROW);
     state.flightDuration = Math.min(0.8, Math.max(0.26, state.thrown.length / FLIGHT_SPEED));
@@ -346,6 +349,9 @@ export function createGame(hooks: GameHooks = {}): Game {
             state.chargeDir = 1;
           }
           state.marker = pointAlong(state.preview.path, state.charge).point;
+          state.live = computeCoverage(state.level.watchers, state.samples, state.walls, [
+            { center: state.marker, radius: state.level.cloudRadius },
+          ]);
           chargeTone.set((state.charge - THROW.minRange) / (top - THROW.minRange));
         }
         if (state.timeLeft <= 0) {

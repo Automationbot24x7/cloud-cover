@@ -1,3 +1,6 @@
+import floorUrl from '../assets/floor.jpg';
+import roofUrl from '../assets/roof.jpg';
+import runnerUrl from '../assets/runner.png';
 import type { SightLine, Vec } from '../core/types';
 import { ARENA, WORLD } from './levels';
 import { SQUAD_SIZE, TIMING, type GameState } from './state';
@@ -18,6 +21,39 @@ export const COLOR = {
   mint: '#3df2b4',
   amber: '#ffc857',
 } as const;
+
+// Generated bitmap art (prompts in art-prompts/). Drawing falls back to flat colour until each image has loaded.
+function loadImage(url: string): HTMLImageElement {
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = url;
+  return img;
+}
+const ART = {
+  floor: loadImage(floorUrl),
+  roof: loadImage(roofUrl),
+  runner: loadImage(runnerUrl),
+};
+const patterns = new WeakMap<CanvasRenderingContext2D, { floor?: CanvasPattern; roof?: CanvasPattern }>();
+
+/** A repeating pattern for a loaded texture, scaled to `size` world units per tile. */
+function patternFor(ctx: CanvasRenderingContext2D, key: 'floor' | 'roof', size: number): CanvasPattern | null {
+  const img = ART[key];
+  if (!img.complete || img.naturalWidth === 0) return null;
+  let cache = patterns.get(ctx);
+  if (!cache) {
+    cache = {};
+    patterns.set(ctx, cache);
+  }
+  let pat = cache[key];
+  if (!pat) {
+    pat = ctx.createPattern(img, 'repeat') ?? undefined;
+    if (!pat) return null;
+    pat.setTransform(new DOMMatrix().scale(size / img.naturalWidth));
+    cache[key] = pat;
+  }
+  return pat;
+}
 
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v);
 const easeOutCubic = (t: number): number => 1 - Math.pow(1 - clamp01(t), 3);
@@ -52,6 +88,17 @@ function drawBackdrop(ctx: CanvasRenderingContext2D, clock: number): void {
   ctx.beginPath();
   ctx.roundRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h, 6);
   ctx.clip();
+  const floor = patternFor(ctx, 'floor', 360);
+  if (floor) {
+    ctx.fillStyle = floor;
+    ctx.fillRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h);
+    // Keep the floor quiet so the pieces read: pull it back towards the backdrop colour.
+    const veil = ctx.createRadialGradient(WORLD.w / 2, WORLD.h / 2, 120, WORLD.w / 2, WORLD.h / 2, 980);
+    veil.addColorStop(0, 'rgba(8, 26, 56, 0.28)');
+    veil.addColorStop(1, 'rgba(4, 12, 28, 0.62)');
+    ctx.fillStyle = veil;
+    ctx.fillRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h);
+  }
   ctx.strokeStyle = COLOR.grid;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -103,6 +150,17 @@ function drawBlocks(ctx: CanvasRenderingContext2D, state: GameState): void {
     poly(ctx, block);
     ctx.fillStyle = g;
     ctx.fill();
+    const roof = patternFor(ctx, 'roof', 220);
+    if (roof) {
+      ctx.fillStyle = roof;
+      ctx.fill();
+      // Light from the top edge so roofs read as raised.
+      const shade = ctx.createLinearGradient(0, minY, 0, maxY);
+      shade.addColorStop(0, 'rgba(160, 200, 255, 0.10)');
+      shade.addColorStop(1, 'rgba(4, 12, 28, 0.30)');
+      ctx.fillStyle = shade;
+      ctx.fill();
+    }
 
     // Roof hatching, clipped to the block.
     ctx.save();
@@ -188,7 +246,10 @@ function drawCrossing(ctx: CanvasRenderingContext2D, state: GameState): void {
 function drawDangerFans(ctx: CanvasRenderingContext2D, state: GameState, alpha: number): void {
   if (alpha <= 0) return;
   const perWatcher = state.samples.length;
-  const lines = state.baseline.lines;
+  // While charging, show the view as it would be with the cloud at the marker, so the
+  // red fans shrink live and the fan learns cause and effect before letting go.
+  const lines = state.charging && state.live ? state.live.lines : state.baseline.lines;
+  if (state.charging && state.live) drawLiveBlocked(ctx, state, alpha);
   for (let w = 0; w < state.level.watchers.length; w++) {
     const from = state.level.watchers[w];
     const pulse = 0.85 + 0.15 * Math.sin(state.clock * 3 + w * 1.7);
@@ -217,6 +278,51 @@ function drawDangerFans(ctx: CanvasRenderingContext2D, state: GameState, alpha: 
       }
     }
   }
+}
+
+/** Sight lines the marker cloud would cut, as faint green rays stopping at the cloud edge. */
+function drawLiveBlocked(ctx: CanvasRenderingContext2D, state: GameState, alpha: number): void {
+  const live = state.live;
+  if (!live) return;
+  ctx.save();
+  ctx.strokeStyle = `rgba(61, 242, 180, ${0.35 * alpha})`;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (const line of live.lines) {
+    if (line.state !== 'cloud') continue;
+    ctx.moveTo(line.from.x, line.from.y);
+    ctx.lineTo(line.end.x, line.end.y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Live "% hidden" readout beside the landing ring while charging. */
+function drawLiveReadout(ctx: CanvasRenderingContext2D, state: GameState): void {
+  const live = state.live;
+  if (state.phase !== 'aim' || !state.charging || !live) return;
+  const pct = Math.round(live.ratio * 100);
+  const m = state.marker;
+  const r = state.level.cloudRadius;
+  const color = pct >= 97 ? COLOR.mint : pct >= 70 ? COLOR.cyan : pct >= 35 ? COLOR.amber : COLOR.coral;
+  const x = m.x + r * 0.72;
+  const y = m.y - r * 0.72;
+  ctx.save();
+  ctx.font = '800 italic 30px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const label = `${pct}%`;
+  const w = ctx.measureText(label).width + 22;
+  ctx.fillStyle = 'rgba(4, 12, 28, 0.85)';
+  ctx.beginPath();
+  ctx.roundRect(x, y - 20, w, 40, 6);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.fillText(label, x + 11, y + 1);
+  ctx.font = '700 13px "Barlow Condensed", sans-serif';
+  ctx.fillStyle = 'rgba(244, 249, 255, 0.75)';
+  ctx.fillText('HIDDEN', x + 2, y + 32);
+  ctx.restore();
 }
 
 function drawWatchers(ctx: CanvasRenderingContext2D, state: GameState): void {
@@ -569,13 +675,32 @@ function drawSquad(ctx: CanvasRenderingContext2D, state: GameState): void {
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = spotted ? COLOR.coral : COLOR.cyan;
-    ctx.strokeStyle = '#06122a';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(x, y, 9.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    const sprite = ART.runner;
+    if (sprite.complete && sprite.naturalWidth > 0) {
+      // The sprite faces up the screen; turn it to face along the crossing.
+      const size = 34;
+      ctx.translate(x, y);
+      ctx.rotate(Math.atan2(uy, ux) + Math.PI / 2);
+      if (running && !spotted) ctx.rotate(Math.sin(state.clock * 22 + i) * 0.08);
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
+      if (spotted) {
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = 'rgba(255, 90, 106, 0.55)';
+        ctx.fillRect(-size / 2, -size / 2, size, size);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = alpha;
+    } else {
+      ctx.fillStyle = spotted ? COLOR.coral : COLOR.cyan;
+      ctx.strokeStyle = '#06122a';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, 9.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
     if (spotted) {
       ctx.strokeStyle = COLOR.coral;
       ctx.lineWidth = 3;
@@ -635,6 +760,7 @@ export function renderWorld(ctx: CanvasRenderingContext2D, state: GameState): vo
   drawSweep(ctx, state);
   drawCloud(ctx, state);
   drawAimGuide(ctx, state);
+  drawLiveReadout(ctx, state);
   drawCanister(ctx, state);
   drawEffects(ctx, state);
   ctx.restore();

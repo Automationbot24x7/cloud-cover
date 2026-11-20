@@ -397,6 +397,9 @@ i {
 /* Attract */
 
 #attract {
+  background:
+    linear-gradient(90deg, rgba(4, 12, 28, 0.97) 0%, rgba(4, 12, 28, 0.9) 34%, rgba(4, 12, 28, 0.35) 62%, rgba(4, 12, 28, 0.55) 100%),
+    url('./assets/key-art.jpg') center right / cover no-repeat;
   display: grid;
   grid-template-columns: 1.25fr 0.75fr;
   align-items: center;
