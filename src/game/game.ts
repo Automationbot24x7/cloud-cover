@@ -3,7 +3,7 @@ import type { Coverage, Vec } from '../core/types';
 import { computeCoverage, sampleSegment } from '../core/vision';
 import { chargeTone, sfx } from './audio';
 import { LEVELS, THROW, wallsOf, type Level } from './levels';
-import { buildRun, dayKey, RUN_TIERS, seededRandom } from './run';
+import { buildRun, dayKey, hashString, RUN_TIERS, seededRandom } from './run';
 import { COLOR } from './render';
 import { CHARGE_SPEED, SQUAD_SIZE, TIMING, type GameState, type Grade, type Puff, type RoundResult, type Runner } from './state';
 
@@ -128,10 +128,14 @@ export interface GameOptions {
   maps?: Level[];
 }
 
-/** A fresh run: a fixed list if one was given, otherwise six maps by tier ending on the Map of the Day. */
+/**
+ * The run: a fixed list if one was given, otherwise today's six maps by tier, the same for every player
+ * all day (seeded by the date) so the daily leaderboard is a fair contest. The set changes at midnight.
+ */
 function newRun(options: GameOptions): Level[] {
   if (options.maps && options.maps.length) return options.maps;
-  return buildRun(LEVELS, seededRandom((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0), dayKey());
+  const day = dayKey();
+  return buildRun(LEVELS, seededRandom(hashString(`run:${day}`)), day);
 }
 
 export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Game {

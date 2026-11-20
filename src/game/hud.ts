@@ -164,7 +164,7 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
     },
 
     showAttract(dailyTitle) {
-      el('attract-daily').textContent = dailyTitle ? `Final round today: ${dailyTitle}` : '';
+      el('attract-daily').textContent = dailyTitle ? `Today's six maps end on: ${dailyTitle}` : '';
       summary.hidden = true;
       banner.hidden = true;
       toast.hidden = true;
