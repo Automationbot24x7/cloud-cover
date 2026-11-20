@@ -7,7 +7,7 @@ import './style.css';
 import './operator.css';
 
 import type { Vec } from './core/types';
-import { isMuted, setMuted, unlock } from './game/audio';
+import { isMuted, setMuted, unlock, updateMusic } from './game/audio';
 import { createGame } from './game/game';
 import { createHud } from './game/hud';
 import { WORLD } from './game/levels';
@@ -145,6 +145,8 @@ function frame(now: number): void {
     hud.showAttract();
   }
   hud.frame(game.state);
+  const st = game.state;
+  updateMusic(st.phase, st.phase === 'aim' && st.charging ? Math.min(1, st.charge / Math.max(1, st.preview.length)) : 0);
 
   if (r3d) {
     r3d.render(game.state);

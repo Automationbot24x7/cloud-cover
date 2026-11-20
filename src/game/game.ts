@@ -163,6 +163,9 @@ export function createGame(hooks: GameHooks = {}): Game {
   let timeAtThrow = 0;
   let lastTick = 0;
   let pending: RoundResult | null = null;
+  /** Sound cues already played this round, so each fires once. */
+  let goPlayed = false;
+  let spottedPlayed = 0;
 
   function setPhase(phase: GameState['phase']): void {
     state.phase = phase;
@@ -211,6 +214,8 @@ export function createGame(hooks: GameHooks = {}): Game {
     state.runners = [];
     state.bouncesHeard = 0;
     state.blocksHeard = 0;
+    goPlayed = false;
+    spottedPlayed = 0;
     state.canister = { ...level.thrower };
     lastTick = Math.ceil(level.seconds);
     refreshPreview();
@@ -417,6 +422,18 @@ export function createGame(hooks: GameHooks = {}): Game {
             sfx.block(state.blocksHeard);
             state.blocksHeard += 1;
           }
+        }
+        if (!goPlayed && state.phaseTime >= TIMING.runStart - 0.35) {
+          goPlayed = true;
+          sfx.go();
+        }
+        // A sting for each runner the moment a watcher spots them (same timing the renderers use).
+        const spottedNow = state.runners.filter(
+          (r) => r.stopAt < 1 && (state.phaseTime - TIMING.runStart - r.delay) / TIMING.runLength > 0.8,
+        ).length;
+        if (spottedNow > spottedPlayed) {
+          spottedPlayed = spottedNow;
+          sfx.spotted();
         }
         if (state.phaseTime >= TIMING.reveal && pending) {
           const result = pending;
