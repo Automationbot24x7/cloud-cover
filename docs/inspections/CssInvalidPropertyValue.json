@@ -1,0 +1,44 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 402,
+      "offset": 38,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Invalid property value",
+        "id": "CssInvalidPropertyValue",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "right / cover no-repeat",
+      "language": "CSS",
+      "description": "Mismatched property value ([\u0026lt;bg-layer\u0026gt; ,]* \u0026lt;final-bg-layer\u0026gt;)"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 402,
+      "offset": 38,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Invalid property value",
+        "id": "CssInvalidPropertyValue",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "right / cover no-repeat",
+      "language": "CSS",
+      "description": "Mismatched property value ([\u0026lt;bg-layer\u0026gt; ,]* \u0026lt;final-bg-layer\u0026gt;)"
+    }
+  ]
+}

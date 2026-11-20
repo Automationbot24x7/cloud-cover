@@ -1,0 +1,84 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 276,
+      "offset": 43,
+      "length": 7,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unresolved custom property",
+        "id": "CssUnresolvedCustomProperty",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "--grade",
+      "language": "CSS",
+      "description": "Cannot resolve \u003ccode\u003e--grade\u003c/code\u003e custom property"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 286,
+      "offset": 13,
+      "length": 7,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unresolved custom property",
+        "id": "CssUnresolvedCustomProperty",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "--grade",
+      "language": "CSS",
+      "description": "Cannot resolve \u003ccode\u003e--grade\u003c/code\u003e custom property"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 276,
+      "offset": 43,
+      "length": 7,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unresolved custom property",
+        "id": "CssUnresolvedCustomProperty",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "--grade",
+      "language": "CSS",
+      "description": "Cannot resolve \u003ccode\u003e--grade\u003c/code\u003e custom property"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 286,
+      "offset": 13,
+      "length": 7,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unresolved custom property",
+        "id": "CssUnresolvedCustomProperty",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "--grade",
+      "language": "CSS",
+      "description": "Cannot resolve \u003ccode\u003e--grade\u003c/code\u003e custom property"
+    }
+  ]
+}

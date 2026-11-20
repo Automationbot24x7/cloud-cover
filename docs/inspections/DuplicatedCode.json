@@ -1,0 +1,44 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/board.ts",
+      "line": 22,
+      "offset": 4,
+      "length": 25,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Duplicated code fragment",
+        "id": "DuplicatedCode",
+        "severity": "WEAK WARNING",
+        "attribute_key": "INFO_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/board.ts"
+      },
+      "highlighted_element": "const entry \u003d entries[i];",
+      "language": "TypeScript",
+      "description": "Duplicate code: lines 22-28"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/hud.ts",
+      "line": 38,
+      "offset": 4,
+      "length": 25,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Duplicated code fragment",
+        "id": "DuplicatedCode",
+        "severity": "WEAK WARNING",
+        "attribute_key": "INFO_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/hud.ts"
+      },
+      "highlighted_element": "const entry \u003d entries[i];",
+      "language": "TypeScript",
+      "description": "Duplicate code: lines 38-44"
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 36,
+      "offset": 25,
+      "length": 2,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "a.",
+      "language": "TypeScript",
+      "description": "A word may be missing after \u0027a\u0027."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 51,
+      "offset": 45,
+      "length": 2,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "a;",
+      "language": "TypeScript",
+      "description": "Articles like \u0027a\u0027 are rarely followed by punctuation. A word may be missing after \u0027a\u0027, or the punctuation mark may not be necessary."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 143,
+      "offset": 11,
+      "length": 1,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "a",
+      "language": "TypeScript",
+      "description": "Use \u0027an\u0027 instead of \u0027a\u0027 if the following word starts with a vowel sound, e.g. \u0027an article\u0027, \u0027an hour\u0027."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 143,
+      "offset": 16,
+      "length": 1,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "a",
+      "language": "TypeScript",
+      "description": "Use \u0027an\u0027 instead of \u0027a\u0027 if the following word starts with a vowel sound, e.g. \u0027an article\u0027, \u0027an hour\u0027."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 151,
+      "offset": 14,
+      "length": 1,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "a",
+      "language": "JavaScript",
+      "description": "Use \u0027an\u0027 instead of \u0027a\u0027 if the following word starts with a vowel sound, e.g. \u0027an article\u0027, \u0027an hour\u0027."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 158,
+      "offset": 48,
+      "length": 1,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "a",
+      "language": "JavaScript",
+      "description": "Use \u0027an\u0027 instead of \u0027a\u0027 if the following word starts with a vowel sound, e.g. \u0027an article\u0027, \u0027an hour\u0027."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/store.ts",
+      "line": 38,
+      "offset": 21,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/store.ts"
+      },
+      "highlighted_element": ", best",
+      "language": "TypeScript",
+      "description": "A determiner may be missing."
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/store.ts",
+      "line": 56,
+      "offset": 18,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Grammar",
+        "id": "GrazieInspection",
+        "severity": "GRAMMAR_ERROR",
+        "attribute_key": "GRAMMAR_ERROR"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/store.ts"
+      },
+      "highlighted_element": ", best",
+      "language": "TypeScript",
+      "description": "A determiner may be missing."
+    }
+  ]
+}

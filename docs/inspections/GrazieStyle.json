@@ -1,0 +1,144 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/game/state.ts",
+      "line": 52,
+      "offset": 36,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/state.ts"
+      },
+      "highlighted_element": "centre",
+      "language": "TypeScript",
+      "description": "American English uses \u0027-er\u0027 instead of \u0027-re\u0027"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/state.ts",
+      "line": 52,
+      "offset": 36,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/state.ts"
+      },
+      "highlighted_element": "centre",
+      "language": "TypeScript",
+      "description": "American English uses \u0027-er\u0027 instead of \u0027-re\u0027"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 122,
+      "offset": 52,
+      "length": 10,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "normalised",
+      "language": "TypeScript",
+      "description": "American English uses \u0027-iz-\u0027 in suffixes"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/operator.ts",
+      "line": 92,
+      "offset": 55,
+      "length": 9,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/operator.ts"
+      },
+      "highlighted_element": "cancelled",
+      "language": "TypeScript",
+      "description": "American English does not double \u0027-l-\u0027 in suffixes"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/audio.ts",
+      "line": 2,
+      "offset": 16,
+      "length": 11,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/audio.ts"
+      },
+      "highlighted_element": "synthesised",
+      "language": "TypeScript",
+      "description": "American English uses \u0027-iz-\u0027 in suffixes"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/render.ts",
+      "line": 25,
+      "offset": 78,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/render.ts"
+      },
+      "highlighted_element": "colour",
+      "language": "JavaScript",
+      "description": "British roots ending with \u0027-our\u0027 usually have \u0027-or\u0027 in American English"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/game/render.ts",
+      "line": 95,
+      "offset": 82,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Style",
+        "id": "GrazieStyle",
+        "severity": "STYLE_SUGGESTION",
+        "attribute_key": "TEXT_STYLE_SUGGESTION"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/render.ts"
+      },
+      "highlighted_element": "colour",
+      "language": "JavaScript",
+      "description": "British roots ending with \u0027-our\u0027 usually have \u0027-or\u0027 in American English"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 130,
+      "offset": 30,
+      "length": 12,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Suspicious variable/parameter name combination",
+        "id": "JSSuspiciousNameCombination",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "y: wallDir.x",
+      "language": "TypeScript",
+      "description": "\u0027x\u0027 should probably not be assigned to \u0027y\u0027"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/core/geom.ts",
+      "line": 131,
+      "offset": 15,
+      "length": 12,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Suspicious variable/parameter name combination",
+        "id": "JSSuspiciousNameCombination",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/core/geom.ts"
+      },
+      "highlighted_element": "x: wallDir.y",
+      "language": "TypeScript",
+      "description": "\u0027y\u0027 should probably not be assigned to \u0027x\u0027"
+    }
+  ]
+}

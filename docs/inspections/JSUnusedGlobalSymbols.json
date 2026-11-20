@@ -1,0 +1,24 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/game/store.ts",
+      "line": 116,
+      "offset": 16,
+      "length": 11,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused global symbol",
+        "id": "JSUnusedGlobalSymbols",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/store.ts"
+      },
+      "highlighted_element": "clearScores",
+      "language": "JavaScript",
+      "description": "Unused function clearScores"
+    }
+  ]
+}

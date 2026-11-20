@@ -1,0 +1,18 @@
+{
+  "problems": [
+    [
+      {
+        "file": "file://$PROJECT_DIR$/src/board.ts",
+        "line": 22,
+        "start": 770,
+        "end": 1051
+      },
+      {
+        "file": "file://$PROJECT_DIR$/src/game/hud.ts",
+        "line": 38,
+        "start": 1272,
+        "end": 1553
+      }
+    ]
+  ]
+}

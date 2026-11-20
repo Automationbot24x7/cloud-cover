@@ -1,0 +1,464 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/board.css",
+      "line": 5,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/board.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 29,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 67,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 240,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 305,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 354,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 373,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 430,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 468,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 640,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 21,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 40,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 56,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 77,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 29,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 67,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 240,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 305,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 354,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 373,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 430,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 468,
+      "offset": 2,
+      "length": 24,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--body)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 640,
+      "offset": 2,
+      "length": 27,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Missing generic font family name",
+        "id": "CssNoGenericFontName",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "font-family: var(--display)",
+      "language": "CSS",
+      "description": "Font property font-family does not have generic default"
+    }
+  ]
+}
