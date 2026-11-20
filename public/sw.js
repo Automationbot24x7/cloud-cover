@@ -1,4 +1,5 @@
-const CACHE = 'cloudcover-v1';
+// Fetch pages and manifests network-first with an offline fallback; cache other assets first.
+const CACHE = 'cloudcover-v2';
 const SHELL = ['./', './index.html', './board.html', './manifest.webmanifest', './icon.svg'];
 
 /** Cache the built pages' local assets before the first offline visit. */
@@ -46,28 +47,51 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    try {
-      const response = await fetch(request);
-      if (response.ok) {
+    if (request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.webmanifest')) {
+      try {
+        const controller = new AbortController();
+        let timeout;
+        const response = await Promise.race([
+          fetch(request, { signal: controller.signal }),
+          new Promise((_, reject) => {
+            timeout = setTimeout(() => {
+              reject(new Error('Network request timed out'));
+              controller.abort();
+            }, 3000);
+          }),
+        ]).finally(() => clearTimeout(timeout));
+        if (!response.ok) throw new Error(`Network request failed: ${response.status}`);
         try {
           await cache.put(request, response.clone());
         } catch {
           // A full or unavailable cache must not break an online request.
         }
+        return response;
+      } catch (error) {
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        if (request.mode === 'navigate') {
+          const fallback = await cache.match(url.pathname.endsWith('board.html') ? './board.html' : './index.html');
+          if (fallback) return fallback;
+        }
+        throw error;
       }
-      return response;
-    } catch (error) {
-      if (request.mode === 'navigate') {
-        const fallback = await cache.match('./index.html');
-        if (fallback) return fallback;
-      }
-      throw error;
     }
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    const response = await fetch(request);
+    if (response.ok) {
+      try {
+        await cache.put(request, response.clone());
+      } catch {
+        // A full or unavailable cache must not break an online request.
+      }
+    }
+    return response;
   })());
 });
