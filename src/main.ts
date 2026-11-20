@@ -4,13 +4,16 @@ import '@fontsource/barlow-condensed/800.css';
 import '@fontsource/barlow-condensed/800-italic.css';
 import '@fontsource/barlow/500.css';
 import './style.css';
+import './operator.css';
 
 import type { Vec } from './core/types';
-import { unlock } from './game/audio';
+import { isMuted, setMuted, unlock } from './game/audio';
 import { createGame } from './game/game';
 import { createHud } from './game/hud';
 import { WORLD } from './game/levels';
+import { createOperatorPanel } from './game/operator';
 import { renderWorld } from './game/render';
+import { registerServiceWorker } from './pwa';
 
 const canvas = document.getElementById('world') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -47,6 +50,7 @@ const hud = createHud(
   {
     play: () => {
       unlock();
+      setMuted(isMuted());
       hud.hideAttract();
       game.start();
     },
@@ -58,6 +62,7 @@ const hud = createHud(
 canvas.addEventListener('pointermove', (event) => game.pointer(toWorld(event)));
 canvas.addEventListener('pointerdown', (event) => {
   unlock();
+  setMuted(isMuted());
   try {
     // Keep receiving the release even if the pointer leaves the canvas mid-charge.
     canvas.setPointerCapture(event.pointerId);
@@ -73,7 +78,6 @@ canvas.addEventListener('pointerup', (event) => {
 });
 canvas.addEventListener('pointercancel', () => game.release());
 canvas.addEventListener('contextmenu', (event) => event.preventDefault());
-window.addEventListener('keydown', (event) => hud.key(event));
 window.addEventListener('resize', resize);
 
 if (import.meta.env.DEV) {
@@ -82,12 +86,42 @@ if (import.meta.env.DEV) {
 }
 
 let last = performance.now();
+let lastInput = last;
+
+/** Return the game and HUD to the attract screen. */
+function resetToAttract(): void {
+  game.reset();
+  hud.showAttract();
+}
+
+for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+  window.addEventListener(type, () => {
+    lastInput = performance.now();
+  }, true);
+}
+window.addEventListener('keydown', () => {
+  lastInput = performance.now();
+}, true);
+
+const operator = createOperatorPanel({ resetToAttract, setMuted, isMuted });
+
+window.addEventListener('keydown', (event) => {
+  if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'o') {
+    event.preventDefault();
+    operator.toggle();
+  } else {
+    hud.key(event);
+  }
+});
 
 function frame(now: number): void {
   // Clamp the step so a stalled tab does not fast-forward the round timer.
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
+  if (now - lastInput > 45_000 && ['intro', 'aim', 'flight', 'reveal', 'result'].includes(game.state.phase)) {
+    resetToAttract();
+  }
   game.update(dt);
   if (hud.tick(dt)) {
     game.reset();
@@ -102,4 +136,5 @@ function frame(now: number): void {
 
 resize();
 hud.showAttract();
+registerServiceWorker();
 requestAnimationFrame(frame);

@@ -1,0 +1,16 @@
+{
+  "name": "Cloud Cover",
+  "short_name": "Cloud Cover",
+  "display": "fullscreen",
+  "background_color": "#06122a",
+  "theme_color": "#06122a",
+  "start_url": "./",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+.operator-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 12, 28, 0.88);
+  pointer-events: auto;
+}
+
+.operator-panel {
+  width: calc(var(--u) * 650);
+  padding: calc(var(--u) * 28) calc(var(--u) * 40) calc(var(--u) * 36);
+  background: var(--navy-800);
+  border-top: calc(var(--u) * 5) solid var(--blue);
+  box-shadow: 0 0 calc(var(--u) * 50) rgba(25, 167, 255, 0.16);
+}
+
+.operator-title {
+  margin: 0 0 calc(var(--u) * 18);
+  font-family: var(--display);
+  font-size: calc(var(--u) * 56);
+  font-style: italic;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--white);
+}
+
+.operator-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: calc(var(--u) * 10);
+  margin-bottom: calc(var(--u) * 22);
+}
+
+.operator-stat {
+  padding: calc(var(--u) * 12);
+  background: rgba(155, 182, 220, 0.1);
+  color: var(--muted);
+  font-family: var(--display);
+  font-size: calc(var(--u) * 22);
+  font-weight: 700;
+  text-align: center;
+}
+
+.operator-button {
+  display: block;
+  width: 100%;
+  margin-top: calc(var(--u) * 10);
+  padding: calc(var(--u) * 10) calc(var(--u) * 24);
+  border: 0;
+  clip-path: polygon(calc(var(--u) * 12) 0, 100% 0, calc(100% - var(--u) * 12) 100%, 0 100%);
+  background: var(--white);
+  color: var(--navy-800);
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: calc(var(--u) * 26);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: background 0.12s, transform 0.12s;
+}
+
+.operator-button:hover,
+.operator-button:focus-visible {
+  background: var(--blue);
+  transform: translateY(calc(var(--u) * -2));
+}
+
+.operator-danger {
+  background: var(--coral);
+}
+
+.operator-note {
+  margin: calc(var(--u) * 6) 0 calc(var(--u) * 14);
+  color: var(--muted);
+  font-family: var(--body);
+  font-size: calc(var(--u) * 19);
+  text-align: center;
+}

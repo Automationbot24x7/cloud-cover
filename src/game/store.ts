@@ -58,6 +58,31 @@ export function loadToday(now = Date.now()): ScoreEntry[] {
   return loadScores().filter((e) => sameDay(e.at, now));
 }
 
+/** Return today's run count, best score and rounded average. */
+export function todayStats(now = Date.now()): { runs: number; best: number; average: number } {
+  const entries = loadToday(now);
+  if (entries.length === 0) return { runs: 0, best: 0, average: 0 };
+  const total = entries.reduce((sum, entry) => sum + entry.score, 0);
+  return { runs: entries.length, best: entries[0].score, average: Math.round(total / entries.length) };
+}
+
+/** Return a CSV field with quotes and line breaks escaped. */
+function csvField(value: string): string {
+  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+}
+
+/** Return scores as CSV with local dates and times. */
+export function scoresToCsv(entries: ScoreEntry[]): string {
+  const rows = entries.map((entry) => {
+    const date = new Date(entry.at);
+    const pad = (value: number): string => String(value).padStart(2, '0');
+    const day = `${String(date.getFullYear()).padStart(4, '0')}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return [day, time, entry.name, String(entry.score), String(entry.saved), String(entry.squad)].map(csvField).join(',');
+  });
+  return ['date,time,tag,score,saved,squad', ...rows].join('\r\n');
+}
+
 /** Save a score and return its 1-based rank on today's board. */
 export function saveScore(entry: ScoreEntry): number {
   const all = loadScores();
@@ -71,6 +96,20 @@ export function saveScore(entry: ScoreEntry): number {
   }
   notify();
   return loadToday(entry.at).findIndex((e) => e.at === entry.at && e.name === entry.name) + 1;
+}
+
+/** Remove today's scores and return the number removed. */
+export function clearToday(now = Date.now()): number {
+  const all = loadScores();
+  const remaining = all.filter((entry) => !sameDay(entry.at, now));
+  let removed = all.length - remaining.length;
+  try {
+    if (removed > 0) localStorage.setItem(KEY, JSON.stringify(remaining));
+  } catch {
+    removed = 0;
+  }
+  notify();
+  return removed;
 }
 
 /** Remove every saved score. Operator action. */
