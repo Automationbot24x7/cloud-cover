@@ -75,7 +75,7 @@ function makePuffs(radius: number, seed: number): Puff[] {
   for (let i = 0; i < ring; i++) {
     const a = (i / ring) * Math.PI * 2 + rand() * 0.4;
     const r = radius * (0.36 + rand() * 0.14);
-    const d = radius * 1.0 - r * 0.8;
+    const d = radius - r * 0.8;
     puff(Math.cos(a) * d, Math.sin(a) * d, r, 0.04 + rand() * 0.12, i % 2);
   }
   for (let i = 0; i < 4; i++) {

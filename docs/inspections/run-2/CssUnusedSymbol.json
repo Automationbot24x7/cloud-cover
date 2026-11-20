@@ -1,0 +1,676 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/board.css",
+      "line": 33,
+      "offset": 18,
+      "length": 3,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/board.css"
+      },
+      "hints": [],
+      "highlighted_element": ".me",
+      "language": "CSS",
+      "description": "Selector me is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 1,
+      "offset": 0,
+      "length": 18,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-backdrop",
+      "language": "CSS",
+      "description": "Selector operator-backdrop is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 11,
+      "offset": 0,
+      "length": 15,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-panel",
+      "language": "CSS",
+      "description": "Selector operator-panel is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 19,
+      "offset": 0,
+      "length": 15,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-title",
+      "language": "CSS",
+      "description": "Selector operator-title is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 29,
+      "offset": 0,
+      "length": 15,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-stats",
+      "language": "CSS",
+      "description": "Selector operator-stats is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 36,
+      "offset": 0,
+      "length": 14,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-stat",
+      "language": "CSS",
+      "description": "Selector operator-stat is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 46,
+      "offset": 0,
+      "length": 16,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-button",
+      "language": "CSS",
+      "description": "Selector operator-button is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 64,
+      "offset": 0,
+      "length": 16,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-button",
+      "language": "CSS",
+      "description": "Selector operator-button is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 65,
+      "offset": 0,
+      "length": 16,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-button",
+      "language": "CSS",
+      "description": "Selector operator-button is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 70,
+      "offset": 0,
+      "length": 16,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-danger",
+      "language": "CSS",
+      "description": "Selector operator-danger is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/operator.css",
+      "line": 74,
+      "offset": 0,
+      "length": 14,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/operator.css"
+      },
+      "hints": [],
+      "highlighted_element": ".operator-note",
+      "language": "CSS",
+      "description": "Selector operator-note is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 119,
+      "offset": 0,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 127,
+      "offset": 0,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 132,
+      "offset": 0,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 132,
+      "offset": 4,
+      "length": 3,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".g0",
+      "language": "CSS",
+      "description": "Selector g0 is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 135,
+      "offset": 0,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 135,
+      "offset": 4,
+      "length": 3,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".g1",
+      "language": "CSS",
+      "description": "Selector g1 is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 138,
+      "offset": 0,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 138,
+      "offset": 4,
+      "length": 3,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".g2",
+      "language": "CSS",
+      "description": "Selector g2 is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 141,
+      "offset": 0,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 141,
+      "offset": 4,
+      "length": 3,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".g3",
+      "language": "CSS",
+      "description": "Selector g3 is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 192,
+      "offset": 11,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".low",
+      "language": "CSS",
+      "description": "Selector low is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 323,
+      "offset": 0,
+      "length": 5,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".chip",
+      "language": "CSS",
+      "description": "Selector chip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 335,
+      "offset": 0,
+      "length": 5,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".chip",
+      "language": "CSS",
+      "description": "Selector chip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 335,
+      "offset": 5,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".speed",
+      "language": "CSS",
+      "description": "Selector speed is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 524,
+      "offset": 15,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pos",
+      "language": "CSS",
+      "description": "Selector pos is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 529,
+      "offset": 14,
+      "length": 3,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".me",
+      "language": "CSS",
+      "description": "Selector me is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 534,
+      "offset": 14,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".empty",
+      "language": "CSS",
+      "description": "Selector empty is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 594,
+      "offset": 16,
+      "length": 4,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".pip",
+      "language": "CSS",
+      "description": "Selector pip is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 613,
+      "offset": 0,
+      "length": 5,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".slot",
+      "language": "CSS",
+      "description": "Selector slot is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 625,
+      "offset": 0,
+      "length": 5,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".slot",
+      "language": "CSS",
+      "description": "Selector slot is never used"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 660,
+      "offset": 4,
+      "length": 5,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Unused selector",
+        "id": "CssUnusedSymbol",
+        "severity": "WARNING",
+        "attribute_key": "NOT_USED_ELEMENT_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "hints": [],
+      "highlighted_element": ".wide",
+      "language": "CSS",
+      "description": "Selector wide is never used"
+    }
+  ]
+}

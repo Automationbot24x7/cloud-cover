@@ -340,23 +340,54 @@ function drawLiveReadout(ctx: CanvasRenderingContext2D, state: GameState): void 
   const m = state.marker;
   const r = state.level.cloudRadius;
   const color = pct >= 97 ? COLOR.mint : pct >= 70 ? COLOR.cyan : pct >= 35 ? COLOR.amber : COLOR.coral;
-  const x = m.x + r * 0.72;
-  const y = m.y - r * 0.72;
   ctx.save();
-  ctx.font = '800 italic 30px "Barlow Condensed", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
+  ctx.font = '800 italic 34px "Barlow Condensed", sans-serif';
   const label = `${pct}%`;
-  const w = ctx.measureText(label).width + 22;
-  ctx.fillStyle = 'rgba(4, 12, 28, 0.85)';
+  const w = Math.max(ctx.measureText(label).width, 52) + 28;
+  const h = 62;
+  // Sit outside the ring, on whichever side has room.
+  const right = m.x + r + 14 + w < WORLD.w - 40;
+  const x = right ? m.x + r + 14 : m.x - r - 14 - w;
+  const y = Math.min(Math.max(m.y - h / 2, 120), WORLD.h - 60 - h);
+  ctx.fillStyle = 'rgba(4, 12, 28, 0.88)';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(x, y - 20, w, 40, 6);
+  ctx.roundRect(x, y, w, h, 8);
   ctx.fill();
+  ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = color;
-  ctx.fillText(label, x + 11, y + 1);
-  ctx.font = '700 13px "Barlow Condensed", sans-serif';
-  ctx.fillStyle = 'rgba(244, 249, 255, 0.75)';
-  ctx.fillText('HIDDEN', x + 2, y + 32);
+  ctx.fillText(label, x + w / 2, y + 36);
+  ctx.font = '700 14px "Barlow Condensed", sans-serif';
+  ctx.fillStyle = 'rgba(244, 249, 255, 0.8)';
+  ctx.fillText('HIDDEN', x + w / 2, y + 53);
+  ctx.restore();
+}
+
+/** "GO!" pops over the waiting squad just before it runs, and safe runners hop on arrival. */
+function drawSquadBeat(ctx: CanvasRenderingContext2D, state: GameState): void {
+  if (state.phase !== 'reveal') return;
+  const t = state.phaseTime - (TIMING.runStart - 0.35);
+  if (t < 0 || t > 0.75) return;
+  const { a, b } = state.level.crossing;
+  const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+  const x = a.x - ((b.x - a.x) / len) * 36;
+  const y = a.y - ((b.y - a.y) / len) * 36 - 46;
+  const pop = easeOutBack(t / 0.25);
+  ctx.save();
+  ctx.globalAlpha = t > 0.55 ? Math.max(0, 1 - (t - 0.55) / 0.2) : 1;
+  ctx.translate(x, y);
+  ctx.scale(pop, pop);
+  ctx.font = '800 italic 40px "Barlow Condensed", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = 'rgba(4, 12, 28, 0.9)';
+  ctx.strokeText('GO!', 0, 0);
+  ctx.fillStyle = COLOR.cyan;
+  ctx.fillText('GO!', 0, 0);
   ctx.restore();
 }
 
@@ -729,7 +760,11 @@ function drawSquad(ctx: CanvasRenderingContext2D, state: GameState): void {
         }
       }
     }
-    const bob = running ? 0 : Math.sin(state.clock * 3 + i * 1.3) * 1.5;
+    let bob = running ? 0 : Math.sin(state.clock * 3 + i * 1.3) * 1.5;
+    if (running && runner && runner.stopAt >= 1) {
+      const arrived = t - TIMING.runStart - runner.delay - TIMING.runLength * 0.85;
+      if (arrived > 0) bob = -Math.abs(Math.sin(arrived * 9 + i)) * 7 * Math.max(0, 1 - arrived / 1.6);
+    }
     const x = a.x + ux * along + nx * lane;
     const y = a.y + uy * along + ny * lane + bob;
 
@@ -817,6 +852,7 @@ export function renderWorld(ctx: CanvasRenderingContext2D, state: GameState): vo
   drawScanBeams(ctx, state, state.phase === 'aim' || state.phase === 'intro' || state.phase === 'attract' ? 1 : 0);
   drawBlocks(ctx, state);
   drawSquad(ctx, state);
+  drawSquadBeat(ctx, state);
   drawWatchers(ctx, state);
   drawThrower(ctx, state);
   drawSweep(ctx, state);

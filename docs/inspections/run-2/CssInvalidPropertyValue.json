@@ -1,0 +1,24 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 405,
+      "offset": 36,
+      "length": 6,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Invalid property value",
+        "id": "CssInvalidPropertyValue",
+        "severity": "ERROR",
+        "attribute_key": "ERRORS_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "right",
+      "language": "CSS",
+      "description": "Mismatched property value \u003cbg-position\u003e(\u0026lt;bg-position\u0026gt;#)"
+    }
+  ]
+}

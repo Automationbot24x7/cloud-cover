@@ -1,0 +1,44 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 405,
+      "offset": 24,
+      "length": 1,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Redundant measure unit",
+        "id": "CssRedundantUnit",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "%",
+      "language": "CSS",
+      "description": "Unit of measure \u003ccode\u003e%\u003c/code\u003e is redundant"
+    },
+    {
+      "file": "file://$PROJECT_DIR$/src/style.css",
+      "line": 405,
+      "offset": 27,
+      "length": 1,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Redundant measure unit",
+        "id": "CssRedundantUnit",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/style.css"
+      },
+      "highlighted_element": "%",
+      "language": "CSS",
+      "description": "Unit of measure \u003ccode\u003e%\u003c/code\u003e is redundant"
+    }
+  ]
+}

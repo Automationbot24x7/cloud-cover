@@ -1,0 +1,24 @@
+{
+  "problems": [
+    {
+      "file": "file://$PROJECT_DIR$/src/game/game.ts",
+      "line": 78,
+      "offset": 14,
+      "length": 12,
+      "module": "cloud-cover",
+      "problem_class": {
+        "name": "Pointless arithmetic expression",
+        "id": "PointlessArithmeticExpressionJS",
+        "severity": "WARNING",
+        "attribute_key": "WARNING_ATTRIBUTES"
+      },
+      "entry_point": {
+        "TYPE": "file",
+        "FQNAME": "file://$PROJECT_DIR$/src/game/game.ts"
+      },
+      "highlighted_element": "radius * 1.0",
+      "language": "TypeScript",
+      "description": "radius * 1.0 can be replaced with radius"
+    }
+  ]
+}
