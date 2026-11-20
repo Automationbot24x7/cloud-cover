@@ -494,6 +494,13 @@ i {
   border-top: calc(var(--u) * 5) solid var(--blue);
 }
 
+.attract-daily {
+  margin: calc(var(--u) * -6) 0 calc(var(--u) * 14);
+  font-family: var(--body), sans-serif;
+  font-size: calc(var(--u) * 18);
+  color: var(--cyan);
+}
+
 .attract-board h2 {
   margin: 0 0 calc(var(--u) * 14);
   font-weight: 800;

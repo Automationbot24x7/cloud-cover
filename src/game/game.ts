@@ -3,6 +3,7 @@ import type { Coverage, Vec } from '../core/types';
 import { computeCoverage, sampleSegment } from '../core/vision';
 import { chargeTone, sfx } from './audio';
 import { LEVELS, THROW, wallsOf, type Level } from './levels';
+import { buildRun, dayKey, RUN_TIERS, seededRandom } from './run';
 import { COLOR } from './render';
 import { CHARGE_SPEED, SQUAD_SIZE, TIMING, type GameState, type Grade, type Puff, type RoundResult, type Runner } from './state';
 
@@ -122,13 +123,26 @@ export interface Game {
   totalRounds: number;
 }
 
-export function createGame(hooks: GameHooks = {}): Game {
-  const first = LEVELS[0];
+export interface GameOptions {
+  /** Play these maps in this order instead of a random run (used for recorded demos and tests). */
+  maps?: Level[];
+}
+
+/** A fresh run: a fixed list if one was given, otherwise six maps by tier ending on the Map of the Day. */
+function newRun(options: GameOptions): Level[] {
+  if (options.maps && options.maps.length) return options.maps;
+  return buildRun(LEVELS, seededRandom((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0), dayKey());
+}
+
+export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Game {
+  const firstRun = newRun(options);
+  const first = firstRun[0];
   const state: GameState = {
     phase: 'attract',
     phaseTime: 0,
     clock: 0,
     roundIndex: 0,
+    run: firstRun,
     level: first,
     walls: [],
     samples: [],
@@ -188,7 +202,7 @@ export function createGame(hooks: GameHooks = {}): Game {
   }
 
   function loadRound(index: number): void {
-    const level = LEVELS[index];
+    const level = state.run[index];
     state.roundIndex = index;
     state.level = level;
     state.walls = wallsOf(level);
@@ -459,7 +473,7 @@ export function createGame(hooks: GameHooks = {}): Game {
 
       case 'result':
         if (state.phaseTime >= TIMING.result) {
-          if (state.roundIndex + 1 < LEVELS.length) {
+          if (state.roundIndex + 1 < state.run.length) {
             loadRound(state.roundIndex + 1);
             setPhase('intro');
             hooks.onRound?.(state.roundIndex, state.level);
@@ -488,6 +502,7 @@ export function createGame(hooks: GameHooks = {}): Game {
     state.particles = [];
     state.rings = [];
     pending = null;
+    state.run = newRun(options);
     loadRound(0);
     setPhase('intro');
     sfx.start();
@@ -501,11 +516,12 @@ export function createGame(hooks: GameHooks = {}): Game {
     state.aimed = false;
     pending = null;
     chargeTone.stop();
+    state.run = newRun(options);
     loadRound(0);
     setPhase('attract');
   }
 
   loadRound(0);
 
-  return { state, update, pointer, press, release, start, reset, totalRounds: LEVELS.length };
+  return { state, update, pointer, press, release, start, reset, totalRounds: options.maps?.length || RUN_TIERS.length };
 }

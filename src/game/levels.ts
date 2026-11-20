@@ -12,8 +12,12 @@ export const THROW: ThrowOptions = { ...DEFAULT_THROW, maxRange: 1900 };
 
 export type Assist = 'full' | 'first';
 
+/** Difficulty: 1 tutorial, 2 easy, 3 needs a bank, 4 hard bank, 5 final-round hard. */
+export type Tier = 1 | 2 | 3 | 4 | 5;
+
 export interface Level {
   id: string;
+  tier: Tier;
   /** Short title shown on the round banner. */
   title: string;
   /** One line shown under the title. Plain words, no jargon. */
@@ -43,9 +47,11 @@ function rect(x: number, y: number, w: number, h: number): Vec[] {
 
 const R = 85;
 
+/** The whole map pool. A run draws six of these by tier (see run.ts). */
 export const LEVELS: Level[] = [
   {
     id: 'open-gap',
+    tier: 1,
     title: 'Open Gap',
     brief: 'One watcher. Drop your cloud in front of it.',
     blocks: [rect(700, 110, 200, 150), rect(700, 620, 200, 230), rect(1130, 620, 150, 110), rect(330, 560, 130, 130)],
@@ -58,6 +64,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 'doorway',
+    tier: 2,
     title: 'The Doorway',
     brief: 'Two watchers, one door. Cloud the door.',
     blocks: [rect(900, 110, 60, 290), rect(900, 520, 60, 330), rect(1180, 400, 110, 120), rect(300, 640, 150, 120)],
@@ -73,6 +80,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 'over-the-top',
+    tier: 3,
     title: 'Off The Wall',
     brief: 'Bank your smoke off the top wall.',
     blocks: [rect(520, 400, 90, 450), rect(240, 180, 150, 110)],
@@ -85,6 +93,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 'side-pocket',
+    tier: 3,
     title: 'Side Pocket',
     brief: 'A pillar hides the door. Go over it or under it.',
     blocks: [rect(900, 110, 60, 290), rect(900, 520, 60, 330), rect(500, 330, 80, 300), rect(1180, 400, 110, 120)],
@@ -100,6 +109,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 'angle-shot',
+    tier: 4,
     title: 'Angle Shot',
     brief: 'The slanted wall sends it where you cannot reach.',
     blocks: [
@@ -119,6 +129,7 @@ export const LEVELS: Level[] = [
   },
   {
     id: 'crossfire',
+    tier: 5,
     title: 'Crossfire',
     brief: 'Watchers on every side. Only the crossing itself is safe to cloud.',
     blocks: [rect(470, 360, 80, 330), rect(1150, 330, 90, 90), rect(1010, 640, 120, 100)],

@@ -36,7 +36,8 @@ export function rankFor(saved: number, squad: number): string {
 export interface Hud {
   /** Per-frame refresh of the numbers that animate. */
   frame(state: GameState): void;
-  showAttract(): void;
+  /** Show the title screen. `dailyTitle` names today's final map. */
+  showAttract(dailyTitle?: string): void;
   hideAttract(): void;
   showRound(index: number, level: Level, total: number): void;
   showAim(): void;
@@ -162,7 +163,8 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       timerFill.classList.toggle('low', state.phase === 'aim' && state.timeLeft <= 3);
     },
 
-    showAttract() {
+    showAttract(dailyTitle) {
+      el('attract-daily').textContent = dailyTitle ? `Final round today: ${dailyTitle}` : '';
       summary.hidden = true;
       banner.hidden = true;
       toast.hidden = true;
@@ -179,7 +181,7 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
 
     showRound(index, level, total) {
       toast.hidden = true;
-      el('banner-kicker').textContent = `ROUND ${index + 1} OF ${total}`;
+      el('banner-kicker').textContent = index === total - 1 ? 'FINAL ROUND: MAP OF THE DAY' : `ROUND ${index + 1} OF ${total}`;
       el('banner-title').textContent = level.title;
       el('banner-brief').textContent = level.brief;
       restartAnimation(banner);

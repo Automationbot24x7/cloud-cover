@@ -72,6 +72,8 @@ export interface GameState {
   clock: number;
 
   roundIndex: number;
+  /** The six maps of the current run, in order; the last is the Map of the Day. */
+  run: Level[];
   level: Level;
   walls: Segment[];
   /** Points along the crossing that the watchers are tested against. */

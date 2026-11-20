@@ -10,7 +10,8 @@ import type { Vec } from './core/types';
 import { isMuted, setMuted, unlock, updateMusic } from './game/audio';
 import { createGame } from './game/game';
 import { createHud } from './game/hud';
-import { WORLD } from './game/levels';
+import { LEVELS, WORLD } from './game/levels';
+import { dayKey, mapOfTheDay } from './game/run';
 import { createOperatorPanel } from './game/operator';
 import { renderWorld } from './game/render';
 import { createRenderer3D, type Renderer3D } from './game/render3d';
@@ -53,13 +54,20 @@ function toWorld(event: PointerEvent): Vec {
   };
 }
 
+// ?maps=id1,id2,... plays a fixed list of maps (for recorded demos and screenshots).
+const fixedMaps = (new URLSearchParams(location.search).get('maps') ?? '')
+  .split(',')
+  .map((id) => LEVELS.find((l) => l.id === id.trim()))
+  .filter((l): l is (typeof LEVELS)[number] => !!l);
+const dailyTitle = (): string => (fixedMaps.length ? '' : mapOfTheDay(LEVELS, dayKey()).title);
+
 const game = createGame({
   onRound: (index, level) => hud.showRound(index, level, game.totalRounds),
   onAim: () => hud.showAim(),
   onThrow: () => hud.showThrow(),
   onResult: (result) => hud.showResult(result, game.state.roundIndex),
   onSummary: (results, score) => hud.showSummary(results, score),
-});
+}, { maps: fixedMaps });
 
 const hud = createHud(
   {
@@ -106,7 +114,7 @@ let lastInput = last;
 /** Return the game and HUD to the attract screen. */
 function resetToAttract(): void {
   game.reset();
-  hud.showAttract();
+  hud.showAttract(dailyTitle());
 }
 
 for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
@@ -142,7 +150,7 @@ function frame(now: number): void {
   if (!frozen) game.update(dt);
   if (!frozen && hud.tick(dt)) {
     game.reset();
-    hud.showAttract();
+    hud.showAttract(dailyTitle());
   }
   hud.frame(game.state);
   const st = game.state;
@@ -158,6 +166,6 @@ function frame(now: number): void {
 }
 
 resize();
-hud.showAttract();
+hud.showAttract(dailyTitle());
 registerServiceWorker();
 requestAnimationFrame(frame);
