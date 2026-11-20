@@ -26,7 +26,7 @@ body {
   margin: 0;
   background: var(--navy-900);
   color: var(--white);
-  font-family: var(--body);
+  font-family: var(--body), sans-serif;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -64,7 +64,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
 }
 
 i {
@@ -237,7 +237,7 @@ i {
 
 .banner-brief {
   margin-top: calc(var(--u) * 8);
-  font-family: var(--body);
+  font-family: var(--body), sans-serif;
   font-weight: 500;
   font-size: calc(var(--u) * 26);
   color: var(--muted);
@@ -265,6 +265,7 @@ i {
 /* ---------- Result toast ---------- */
 
 .toast {
+  --grade: var(--blue);
   position: absolute;
   left: 50%;
   top: calc(var(--u) * 130);
@@ -302,7 +303,7 @@ i {
 }
 
 .toast-sub {
-  font-family: var(--body);
+  font-family: var(--body), sans-serif;
   font-size: calc(var(--u) * 20);
   color: var(--muted);
 }
@@ -351,7 +352,7 @@ i {
 .overlay {
   position: absolute;
   inset: 0;
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
   background: radial-gradient(120% 90% at 30% 50%, rgba(4, 12, 28, 0.9) 30%, rgba(4, 12, 28, 0.72) 100%);
   animation: fade-in 0.35s ease both;
 }
@@ -370,7 +371,7 @@ i {
 }
 
 .cta {
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
   font-weight: 800;
   font-style: italic;
   font-size: calc(var(--u) * 38);
@@ -397,9 +398,13 @@ i {
 /* Attract */
 
 #attract {
-  background:
+  background-color: transparent;
+  background-image:
     linear-gradient(90deg, rgba(4, 12, 28, 0.97) 0%, rgba(4, 12, 28, 0.9) 34%, rgba(4, 12, 28, 0.35) 62%, rgba(4, 12, 28, 0.55) 100%),
-    url('./assets/key-art.jpg') center right / cover no-repeat;
+    url('./assets/key-art.jpg');
+  background-position: 0% 0%, center right;
+  background-size: auto, cover;
+  background-repeat: repeat, no-repeat;
   display: grid;
   grid-template-columns: 1.25fr 0.75fr;
   align-items: center;
@@ -427,7 +432,7 @@ i {
 
 .tagline {
   margin: calc(var(--u) * 26) 0 calc(var(--u) * 30);
-  font-family: var(--body);
+  font-family: var(--body), sans-serif;
   font-weight: 500;
   font-size: calc(var(--u) * 30);
   color: var(--muted);
@@ -465,7 +470,7 @@ i {
 }
 
 .steps span {
-  font-family: var(--body);
+  font-family: var(--body), sans-serif;
   font-size: calc(var(--u) * 19);
   line-height: 1.3;
   color: var(--muted);
@@ -637,7 +642,7 @@ i {
 }
 
 .key {
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
   font-weight: 700;
   font-size: calc(var(--u) * 30);
   color: var(--white);

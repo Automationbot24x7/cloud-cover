@@ -35,7 +35,7 @@ function safeParse(raw: string | null): ScoreEntry[] {
   }
 }
 
-/** Every saved score, best first. */
+/** Return every saved score in descending order. */
 export function loadScores(): ScoreEntry[] {
   let raw: string | null = null;
   try {
@@ -53,7 +53,7 @@ function sameDay(at: number, now: number): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-/** Today's scores, best first. */
+/** Return today's scores in descending order. */
 export function loadToday(now = Date.now()): ScoreEntry[] {
   return loadScores().filter((e) => sameDay(e.at, now));
 }
@@ -110,16 +110,6 @@ export function clearToday(now = Date.now()): number {
   }
   notify();
   return removed;
-}
-
-/** Remove every saved score. Operator action. */
-export function clearScores(): void {
-  try {
-    localStorage.removeItem(KEY);
-  } catch {
-    // Nothing to clear.
-  }
-  notify();
 }
 
 function notify(): void {

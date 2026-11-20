@@ -6,6 +6,7 @@ import '@fontsource/barlow/500.css';
 import './style.css';
 import './board.css';
 
+import { renderBoardRows } from './game/boardRows';
 import { loadToday, onScoresChanged } from './game/store';
 
 const ROWS = 10;
@@ -17,26 +18,7 @@ let newest = 0;
 function paint(): void {
   const entries = loadToday();
   const latest = entries.reduce((max, e) => Math.max(max, e.at), 0);
-  list.replaceChildren();
-  for (let i = 0; i < ROWS; i++) {
-    const entry = entries[i];
-    const li = document.createElement('li');
-    const pos = document.createElement('span');
-    pos.className = 'pos';
-    pos.textContent = String(i + 1);
-    const name = document.createElement('span');
-    const score = document.createElement('span');
-    if (entry) {
-      name.textContent = entry.name;
-      score.textContent = entry.score.toLocaleString('en-US');
-      if (entry.at === latest && latest !== newest) li.classList.add('me');
-    } else {
-      li.classList.add('empty');
-      name.textContent = '---';
-    }
-    li.append(pos, name, score);
-    list.append(li);
-  }
+  renderBoardRows(list, entries, ROWS, latest !== newest ? latest : undefined);
   newest = latest;
   foot.textContent = entries.length
     ? `${entries.length} run${entries.length === 1 ? '' : 's'} today`

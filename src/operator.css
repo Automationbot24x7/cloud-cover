@@ -18,7 +18,7 @@
 
 .operator-title {
   margin: 0 0 calc(var(--u) * 18);
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
   font-size: calc(var(--u) * 56);
   font-style: italic;
   font-weight: 800;
@@ -37,7 +37,7 @@
   padding: calc(var(--u) * 12);
   background: rgba(155, 182, 220, 0.1);
   color: var(--muted);
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
   font-size: calc(var(--u) * 22);
   font-weight: 700;
   text-align: center;
@@ -53,7 +53,7 @@
   background: var(--white);
   color: var(--navy-800);
   cursor: pointer;
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
   font-size: calc(var(--u) * 26);
   font-style: italic;
   font-weight: 800;
@@ -74,7 +74,7 @@
 .operator-note {
   margin: calc(var(--u) * 6) 0 calc(var(--u) * 14);
   color: var(--muted);
-  font-family: var(--body);
+  font-family: var(--body), sans-serif;
   font-size: calc(var(--u) * 19);
   text-align: center;
 }

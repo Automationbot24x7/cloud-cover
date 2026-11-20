@@ -33,7 +33,7 @@ export function cross(a: Vec, b: Vec): number {
   return a.x * b.y - a.y * b.x;
 }
 
-/** Return the length of a. */
+/** Return the vector's length. */
 export function length(a: Vec): number {
   return Math.sqrt(a.x * a.x + a.y * a.y);
 }
@@ -48,7 +48,7 @@ export function lerp(a: Vec, b: Vec, t: number): Vec {
   return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
-/** Return a unit vector in the direction of a; zero vector when |a| < EPS. */
+/** Return a unit vector in the input direction, or a zero vector when its length is less than EPS. */
 export function normalize(a: Vec): Vec {
   const len = length(a);
   if (len < EPS) return { x: 0, y: 0 };
@@ -126,8 +126,11 @@ function raySegment(
 
   // Compute wall normal facing the ray origin
   const wallDir = normalize(segDir);
-  // Two possible normals: perpendicular to wallDir
+  // The swapped coordinates form a perpendicular normal.
+  // noinspection JSSuspiciousNameCombination
   const n1 = { x: -wallDir.y, y: wallDir.x };
+  // The swapped coordinates form the opposite perpendicular normal.
+  // noinspection JSSuspiciousNameCombination
   const n2 = { x: wallDir.y, y: -wallDir.x };
 
   // Pick the one that faces the origin (dot(fromPoint->origin, normal) > 0)
@@ -140,7 +143,7 @@ function raySegment(
 
 /**
  * Find the first point walking from a to b that lies on or inside the circle.
- * Returns a if a is already inside. Returns null if the segment never touches the circle.
+ * Returns the starting point if it is already inside, or null if the segment never touches the circle.
  */
 export function segmentCircleEntry(
   a: Vec,
@@ -148,14 +151,14 @@ export function segmentCircleEntry(
   center: Vec,
   radius: number
 ): Vec | null {
-  // Check if a is already inside
+  // Check if the starting point is already inside
   if (distance(a, center) <= radius + EPS) {
     return a;
   }
 
   const dir = sub(b, a);
   const dirLen = length(dir);
-  if (dirLen < EPS) return null; // a === b and a is outside
+  if (dirLen < EPS) return null; // The segment is degenerate and its starting point is outside
 
   // Parametric: p(t) = a + t * dir, t in [0, 1]
   // |p(t) - center|^2 = radius^2

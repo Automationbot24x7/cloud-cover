@@ -2,7 +2,7 @@
   display: grid;
   place-items: center;
   background: radial-gradient(120% 100% at 50% 0%, var(--navy-700), var(--navy-900));
-  font-family: var(--display);
+  font-family: var(--display), sans-serif;
 }
 
 .board-screen {

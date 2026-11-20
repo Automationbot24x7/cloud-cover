@@ -1,8 +1,9 @@
 import { sfx } from './audio';
+import { renderBoardRows } from './boardRows';
 import { GRADE_LABEL } from './game';
 import type { Level } from './levels';
 import { SQUAD_SIZE, type GameState, type Grade, type RoundResult } from './state';
-import { loadToday, saveScore, type ScoreEntry } from './store';
+import { loadToday, saveScore } from './store';
 
 const GRADE_COLOR: Record<Grade, string> = {
   0: 'var(--coral)',
@@ -30,30 +31,6 @@ export function rankFor(saved: number, squad: number): string {
   if (share >= 0.75) return 'SMOKE PRO';
   if (share >= 0.5) return 'COVER CADET';
   return 'FRESH RECRUIT';
-}
-
-function renderBoard(list: HTMLElement, entries: ScoreEntry[], rows: number, highlightAt?: number): void {
-  list.replaceChildren();
-  for (let i = 0; i < rows; i++) {
-    const entry = entries[i];
-    const li = document.createElement('li');
-    const pos = document.createElement('span');
-    pos.className = 'pos';
-    pos.textContent = String(i + 1);
-    const name = document.createElement('span');
-    const score = document.createElement('span');
-    if (entry) {
-      name.textContent = entry.name;
-      score.textContent = entry.score.toLocaleString('en-US');
-      if (highlightAt !== undefined && entry.at === highlightAt) li.classList.add('me');
-    } else {
-      li.classList.add('empty');
-      name.textContent = '---';
-      score.textContent = '';
-    }
-    li.append(pos, name, score);
-    list.append(li);
-  }
 }
 
 export interface Hud {
@@ -150,7 +127,7 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
     entry.hidden = true;
     saved.hidden = false;
     el('saved-rank').textContent = rank > 0 ? `#${rank} TODAY` : 'SAVED';
-    renderBoard(el('summary-board'), loadToday(), 5, at);
+    renderBoardRows(el('summary-board'), loadToday(), 5, at);
     idle = 0;
     idleLimit = SAVED_IDLE;
   }
@@ -193,7 +170,7 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       hint.style.opacity = '0';
       roundTitle.textContent = '';
       pips.querySelectorAll('.pip').forEach((p) => (p.className = 'pip'));
-      renderBoard(el('attract-board'), loadToday(), 5);
+      renderBoardRows(el('attract-board'), loadToday(), 5);
     },
 
     hideAttract() {
