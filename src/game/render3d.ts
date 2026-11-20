@@ -92,6 +92,65 @@ function windowTexture(seed: number): THREE.CanvasTexture {
   return tex;
 }
 
+/** Rooftop structure walls: poured concrete panels with seams and a darker cap band. No windows. */
+function concreteTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 256;
+  const g = c.getContext('2d') as CanvasRenderingContext2D;
+  g.fillStyle = '#2a3a56';
+  g.fillRect(0, 0, 256, 256);
+  const rand = seeded(21);
+  for (let i = 0; i < 900; i++) {
+    const v = 30 + Math.floor(rand() * 40);
+    g.fillStyle = `rgba(${v}, ${v + 14}, ${v + 34}, 0.25)`;
+    g.fillRect(rand() * 256, rand() * 256, 2 + rand() * 4, 2 + rand() * 4);
+  }
+  g.strokeStyle = 'rgba(10, 18, 34, 0.8)';
+  g.lineWidth = 3;
+  for (let x = 0; x <= 256; x += 64) {
+    g.beginPath();
+    g.moveTo(x, 0);
+    g.lineTo(x, 256);
+    g.stroke();
+  }
+  g.fillStyle = 'rgba(8, 14, 28, 0.55)';
+  g.fillRect(0, 0, 256, 22);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** Three hard light bands for the cel-shaded smoke. */
+function toonRamp(): THREE.DataTexture {
+  const data = new Uint8Array([120, 120, 120, 255, 195, 195, 195, 255, 255, 255, 255, 255]);
+  const t = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
+  t.minFilter = THREE.NearestFilter;
+  t.magFilter = THREE.NearestFilter;
+  t.generateMipmaps = false;
+  t.needsUpdate = true;
+  return t;
+}
+
+/** A lumpy unit sphere: an icosphere with its vertices pushed in and out a little. */
+function lumpySphere(seed: number): THREE.BufferGeometry {
+  const geo = new THREE.IcosahedronGeometry(1, 5);
+  const rand = seeded(seed);
+  const bumps = Array.from({ length: 5 }, () => new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize());
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).normalize();
+    let k = 1;
+    for (const b of bumps) k += Math.max(0, v.dot(b) - 0.55) * 0.5;
+    v.multiplyScalar(k);
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
 /** The crossing lane: chevrons that scroll in the running direction. */
 function laneTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
@@ -177,6 +236,7 @@ export function visibilityFan(
 }
 
 interface WatcherRig {
+  spill: THREE.Mesh;
   group: THREE.Group;
   head: THREE.Object3D;
   eye: THREE.Mesh;
@@ -212,7 +272,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.22;
-  scene.fog = new THREE.FogExp2(C.fog, 0.00042);
+  scene.fog = new THREE.Fog(C.fog, 2300, 5600);
 
   const camera = new THREE.PerspectiveCamera(30, 16 / 9, 10, 9000);
   const BASE_CAM = new THREE.Vector3(0, 1720, 1010);
@@ -222,7 +282,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1600, 900), 0.85, 0.55, 0.72);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1600, 900), 0.6, 0.45, 0.86);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
@@ -277,12 +337,12 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     new THREE.PlaneGeometry(ARENA.w, ARENA.h),
     new THREE.MeshStandardMaterial({
       map: floorTex,
-      color: 0xd8e4ff,
-      roughness: 0.42,
-      metalness: 0.35,
+      color: 0x8d9fc6,
+      roughness: 0.62,
+      metalness: 0.12,
       emissive: 0x1a3566,
       emissiveMap: floorTex,
-      emissiveIntensity: 0.45,
+      emissiveIntensity: 0.3,
     }),
   );
   floor.rotation.x = -Math.PI / 2;
@@ -313,6 +373,78 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   curb(ARENA.w + 8, 4, (ax0 + ax1) / 2, az1);
   curb(4, ARENA.h + 8, ax0, (az0 + az1) / 2);
   curb(4, ARENA.h + 8, ax1, (az0 + az1) / 2);
+
+  // A concrete parapet just outside the play area, with a railing, so the roof has an edge.
+  {
+    const concrete = concreteTexture();
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x55688a, map: concrete, roughness: 0.85 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x6f7f9c, metalness: 0.3, roughness: 0.7, envMapIntensity: 0.05 });
+    const T = 16;
+    const H = 18;
+    const wall = (w: number, d: number, x: number, z: number): void => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, H, d), wallMat);
+      m.position.set(x, H / 2, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      scene.add(m);
+    };
+    wall(ARENA.w + 2 * T + 8, T, (ax0 + ax1) / 2, az0 - T / 2 - 4);
+    wall(ARENA.w + 2 * T + 8, T, (ax0 + ax1) / 2, az1 + T / 2 + 4);
+    wall(T, ARENA.h + 8, ax0 - T / 2 - 4, (az0 + az1) / 2);
+    wall(T, ARENA.h + 8, ax1 + T / 2 + 4, (az0 + az1) / 2);
+    const posts: THREE.Vector3[] = [];
+    for (let x = ax0 - 12; x <= ax1 + 12; x += 70) {
+      posts.push(new THREE.Vector3(x, 0, az0 - 12), new THREE.Vector3(x, 0, az1 + 12));
+    }
+    for (let z = az0 + 58; z <= az1 - 12; z += 70) {
+      posts.push(new THREE.Vector3(ax0 - 12, 0, z), new THREE.Vector3(ax1 + 12, 0, z));
+    }
+    const postGeo = new THREE.CylinderGeometry(1.6, 1.6, 22, 6);
+    const postMesh = new THREE.InstancedMesh(postGeo, railMat, posts.length);
+    const m4 = new THREE.Matrix4();
+    posts.forEach((p, i) => {
+      m4.makeTranslation(p.x, H + 11, p.z);
+      postMesh.setMatrixAt(i, m4);
+    });
+    scene.add(postMesh);
+    const rail = (w: number, d: number, x: number, z: number): void => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.5, d), railMat);
+      m.position.set(x, H + 22, z);
+      scene.add(m);
+    };
+    rail(ARENA.w + 24, 2.5, (ax0 + ax1) / 2, az0 - 12);
+    rail(ARENA.w + 24, 2.5, (ax0 + ax1) / 2, az1 + 12);
+    rail(2.5, ARENA.h + 24, ax0 - 12, (az0 + az1) / 2);
+    rail(2.5, ARENA.h + 24, ax1 + 12, (az0 + az1) / 2);
+
+    // The building we are standing on, dropping away below the roof.
+    const facade = windowTexture(2);
+    facade.repeat.set(ARENA.w / 130, 600 / 130);
+    const below = new THREE.Mesh(
+      new THREE.BoxGeometry(ARENA.w + 2 * T + 8, 600, ARENA.h + 2 * T + 8),
+      new THREE.MeshStandardMaterial({ color: 0x0b1630, emissive: 0xffffff, emissiveMap: facade, emissiveIntensity: 0.45 }),
+    );
+    below.position.set((ax0 + ax1) / 2, -306, (az0 + az1) / 2);
+    scene.add(below);
+
+    // Lower neighbouring rooftops between us and the skyline.
+    const rand = seeded(17);
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x1a2742, roughness: 0.9 });
+    for (let i = 0; i < 14; i++) {
+      const w = 260 + rand() * 360;
+      const d = 200 + rand() * 300;
+      const drop = 70 + rand() * 160;
+      const side = i % 4;
+      const x = side < 2 ? -1000 + rand() * 2000 : side === 2 ? ax0 - 80 - w / 2 - rand() * 200 : ax1 + 80 + w / 2 + rand() * 200;
+      const z = side === 0 ? az0 - 90 - d / 2 - rand() * 150 : side === 1 ? az1 + 90 + d / 2 + rand() * 150 : -500 + rand() * 1000;
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(w, 600, d), roofMat);
+      slab.position.set(x, -drop - 300, z);
+      scene.add(slab);
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(4, 8, 6), new THREE.MeshBasicMaterial({ color: rand() > 0.5 ? C.amber : C.cyan }));
+      lamp.position.set(x + (rand() - 0.5) * w * 0.6, -drop + 6, z + (rand() - 0.5) * d * 0.6);
+      scene.add(lamp);
+    }
+  }
 
   // A ring of taller buildings outside the play area, for depth and city glow.
   {
@@ -369,7 +501,15 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const beamFloorMat = new THREE.MeshBasicMaterial({
     color: C.coral,
     transparent: true,
-    opacity: 0.12,
+    opacity: 0.2,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const beamSpillMat = new THREE.MeshBasicMaterial({
+    color: C.coral,
+    transparent: true,
+    opacity: 0.045,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     side: THREE.DoubleSide,
@@ -414,15 +554,15 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     levelId = level.id;
 
     // Buildings: extruded footprints with roof texture on top and lit windows on the sides.
-    const facade = windowTexture(level.id.length * 13 + 1);
+    const concrete = concreteTexture();
     for (const poly of level.blocks) {
       const shape = new THREE.Shape(poly.map((p) => new THREE.Vector2(p.x - CX, CZ - p.y)));
       const h = heightOf(poly);
       const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false });
       geo.rotateX(-Math.PI / 2);
-      const side = facade.clone();
+      const side = concrete.clone();
       side.needsUpdate = true;
-      side.repeat.set(1 / 110, 1 / 110);
+      side.repeat.set(1 / 120, 1 / h);
       const roofMat = new THREE.MeshStandardMaterial({
         map: roofTex,
         color: 0xffffff,
@@ -431,13 +571,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
         emissiveMap: roofTex,
         emissiveIntensity: 0.7,
       });
-      const sideMat = new THREE.MeshStandardMaterial({
-        color: 0x13254a,
-        emissive: 0xffffff,
-        emissiveMap: side,
-        emissiveIntensity: 0.6,
-        roughness: 0.85,
-      });
+      const sideMat = new THREE.MeshStandardMaterial({ color: 0x8696b4, map: side, roughness: 0.88 });
       const mesh = new THREE.Mesh(geo, [roofMat, sideMat]);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -499,7 +633,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
 
       const edges = new THREE.LineSegments(
         new THREE.EdgesGeometry(geo, 30),
-        new THREE.LineBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.55 }),
+        new THREE.LineBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.28 }),
       );
       levelGroup.add(edges);
     }
@@ -541,7 +675,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const c = { x: p.x + ux * 38 * dir, y: p.y + uy * 38 * dir };
       const pad = new THREE.Mesh(
         new THREE.BoxGeometry(84, 4, 100),
-        new THREE.MeshStandardMaterial({ color: 0x1a3c66, emissive: 0x0a5aa0, emissiveIntensity: 0.45, roughness: 0.5 }),
+        new THREE.MeshStandardMaterial({ color: 0x14233d, emissive: 0x06243f, emissiveIntensity: 0.6, roughness: 0.6, metalness: 0.4 }),
       );
       pad.rotation.y = -heading + Math.PI / 2;
       pad.position.copy(at(c, 2));
@@ -611,8 +745,15 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       band.rotation.x = Math.PI / 2;
       band.position.y = 4;
       group.add(band);
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(4, 5, 22, 10),
+        new THREE.MeshStandardMaterial({ color: 0x3a4258, metalness: 0.7, roughness: 0.35 }),
+      );
+      pole.position.y = 34;
+      group.add(pole);
       const head = new THREE.Group();
-      head.position.y = EYE_HEIGHT - 6;
+      head.position.y = EYE_HEIGHT - 2;
+      head.rotation.z = 0;
       const box = new THREE.Mesh(
         new THREE.BoxGeometry(40, 20, 26),
         new THREE.MeshStandardMaterial({ color: 0x2a2f42, roughness: 0.5, metalness: 0.6 }),
@@ -638,6 +779,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       group.add(light);
       levelGroup.add(group);
 
+      const spill = new THREE.Mesh(new THREE.BufferGeometry(), beamSpillMat);
+      spill.renderOrder = 1;
+      levelGroup.add(spill);
       const floorMesh = new THREE.Mesh(new THREE.BufferGeometry(), beamFloorMat);
       floorMesh.renderOrder = 2;
       const beam = new THREE.Mesh(new THREE.BufferGeometry(), beamVolumeMat);
@@ -647,7 +791,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
         new THREE.MeshBasicMaterial({ color: C.coral, transparent: true, opacity: 0.95 }),
       );
       levelGroup.add(floorMesh, beam, scan);
-      rigs.push({ group, head, eye, floor: floorMesh, beam, scan, light });
+      rigs.push({ spill, group, head, eye, floor: floorMesh, beam, scan, light });
     }
 
     scene.add(levelGroup);
@@ -742,7 +886,20 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   scene.add(canister);
 
   // Smoke: a pool of camera-facing puffs, stacked in height for volume.
-  const SMOKE_LAYERS = 3;
+  const SMOKE_LAYERS = 1;
+  const toon = toonRamp();
+  const puffGeos = [lumpySphere(1), lumpySphere(2), lumpySphere(3)];
+  const puffMat = new THREE.MeshToonMaterial({ color: 0xdfe9f6, gradientMap: toon, emissive: 0x1b2a44 });
+  const puffMeshes: THREE.Mesh[] = [];
+  const ensurePuffMeshes = (n: number): void => {
+    while (puffMeshes.length < n) {
+      const m = new THREE.Mesh(puffGeos[puffMeshes.length % 3], puffMat);
+      m.castShadow = true;
+      m.visible = false;
+      scene.add(m);
+      puffMeshes.push(m);
+    }
+  };
   const smokeSprites: THREE.Sprite[] = [];
   const smokeShadow = new THREE.Mesh(
     new THREE.CircleGeometry(1, 48),
@@ -772,7 +929,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const runners: { card: THREE.Mesh; shadow: THREE.Mesh; halo: THREE.Mesh }[] = [];
   for (let i = 0; i < 5; i++) {
     const card = new THREE.Mesh(
-      new THREE.PlaneGeometry(74, 74),
+      new THREE.PlaneGeometry(88, 88),
       new THREE.MeshBasicMaterial({ map: runnerTex, transparent: true, depthWrite: false }),
     );
     card.renderOrder = 4;
@@ -789,6 +946,20 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     scene.add(shadow, halo, card);
     runners.push({ card, shadow, halo });
   }
+
+  // A "% hidden" tag beside the landing ring, as an overlay positioned from the 3D scene.
+  const tag = document.createElement('div');
+  tag.className = 'world-tag';
+  tag.hidden = true;
+  canvas.parentElement?.appendChild(tag);
+  // Power ring around the thrower while charging.
+  const powerRing = new THREE.Mesh(
+    new THREE.RingGeometry(46, 54, 64, 1, 0, 0.01),
+    new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, depthWrite: false }),
+  );
+  powerRing.rotation.x = -Math.PI / 2;
+  powerRing.visible = false;
+  scene.add(powerRing);
 
   // Reveal sight lines: one segment per watcher-to-crossing line.
   const sightGeo = new THREE.BufferGeometry();
@@ -816,6 +987,11 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   let cssW = 1600;
   let cssH = 900;
+
+  function project(p: Vec, h = 0): { x: number; y: number } {
+    const v = at(p, h).project(camera);
+    return { x: ((v.x + 1) / 2) * cssW, y: ((1 - v.y) / 2) * cssH };
+  }
 
   function setFan(mesh: THREE.Mesh, origin: Vec, pts: Vec[], height: number, volume: boolean): void {
     const n = pts.length;
@@ -867,10 +1043,32 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const angB = Math.atan2(b.y - w.y, b.x - w.x);
       const angM = Math.atan2(mid.y - w.y, mid.x - w.x);
       const wrap = (v: number): number => Math.atan2(Math.sin(v), Math.cos(v));
-      const half = Math.max(Math.abs(wrap(angA - angM)), Math.abs(wrap(angB - angM))) + 0.12;
-      const pts = visibilityFan(w, mid, half, 96, state.walls, clouds, 1900);
+      const span = Math.max(Math.abs(wrap(angA - angM)), Math.abs(wrap(angB - angM)));
+      // Dim spill: the whole searchlight, out to the walls.
+      const spillPts = visibilityFan(w, mid, span + 0.12, 72, state.walls, clouds, 1900);
+      setFan(rig.spill, w, spillPts, 0.4, false);
+      // Bright fan: only what the watcher can see of the crossing, stopping just past the lane,
+      // so lit = dangerous and nothing else glows.
+      const raw = visibilityFan(w, mid, span + 0.02, 96, state.walls, clouds, 1900);
+      const pts = raw.map((q) => {
+        const dx = q.x - w.x;
+        const dy = q.y - w.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const ux = dx / d;
+        const uy = dy / d;
+        // Distance along this ray to the crossing line, if it crosses it ahead of the watcher.
+        const ex = b.x - a.x;
+        const ey = b.y - a.y;
+        const den = ux * ey - uy * ex;
+        if (Math.abs(den) < 1e-6) return q;
+        const t = ((a.x - w.x) * ey - (a.y - w.y) * ex) / den;
+        if (t <= 0) return q;
+        const stop = Math.min(d, t + 34);
+        return { x: w.x + ux * stop, y: w.y + uy * stop };
+      });
       setFan(rig.floor, w, pts, 0.6, false);
       setFan(rig.beam, w, pts, EYE_HEIGHT, true);
+      rig.spill.visible = showBeams;
       rig.floor.visible = showBeams;
       rig.beam.visible = showBeams;
 
@@ -905,6 +1103,8 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     if (!aiming) {
       routeLine.visible = chargeLine.visible = stubLine.visible = false;
       ring.visible = ringFill.visible = false;
+      powerRing.visible = false;
+      tag.hidden = true;
       bounceDots.forEach((d) => (d.visible = false));
       return;
     }
@@ -950,9 +1150,30 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       ring.position.copy(at(state.marker, 2));
       ringFill.position.copy(at(state.marker, 1.5));
       ring.rotation.z = state.clock * 0.6;
+      const top = Math.max(1, state.preview.length);
+      const share = Math.max(0.01, Math.min(1, state.charge / top));
+      powerRing.geometry.dispose();
+      powerRing.geometry = new THREE.RingGeometry(46, 54, 64, 1, Math.PI / 2, -share * Math.PI * 2);
+      powerRing.position.copy(at(state.level.thrower, 7));
+      (powerRing.material as THREE.MeshBasicMaterial).color.set(share > 0.85 ? C.amber : C.cyan);
+      powerRing.visible = true;
+      // The readout teaches what "covered" means in the first two rounds, then the player reads it alone.
+      if (state.live && state.roundIndex < 2) {
+        const pct = Math.round(state.live.ratio * 100);
+        const edge = project({ x: state.marker.x + r, y: state.marker.y }, 4);
+        tag.hidden = false;
+        tag.style.left = `${edge.x + 10}px`;
+        tag.style.top = `${edge.y - 28}px`;
+        tag.dataset.grade = pct >= 97 ? '3' : pct >= 70 ? '2' : pct >= 35 ? '1' : '0';
+        tag.innerHTML = `<b>${pct}%</b><span>HIDDEN</span>`;
+      } else {
+        tag.hidden = true;
+      }
     } else {
       chargeLine.visible = false;
       ring.visible = ringFill.visible = false;
+      powerRing.visible = false;
+      tag.hidden = true;
     }
   }
 
@@ -971,7 +1192,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   function updateSmoke(state: GameState): void {
     const cloud = state.cloud;
     ensureSmoke(state.puffs.length * SMOKE_LAYERS);
+    ensurePuffMeshes(state.puffs.length * 3);
     smokeSprites.forEach((s) => (s.visible = false));
+    puffMeshes.forEach((m) => (m.visible = false));
     smokeShadow.visible = false;
     if (!cloud) return;
     const age = state.phase === 'reveal' ? state.phaseTime : TIMING.reveal + state.phaseTime;
@@ -984,7 +1207,8 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     // Lit from the watchers: puffs a watcher can see pick up a red edge.
     const seen = state.level.watchers.map((w) => w);
     let n = 0;
-    state.puffs.forEach((puff) => {
+    let pm = 0;
+    state.puffs.forEach((puff, pi) => {
       const k = easeOutBack((age - puff.delay) / (TIMING.bloom * 1.4));
       if (k <= 0) {
         n += SMOKE_LAYERS;
@@ -994,6 +1218,18 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const px = cloud.center.x + puff.dx * k + Math.sin(state.clock * 0.9 + puff.phase) * 4 * drift;
       const py = cloud.center.y + puff.dy * k + Math.cos(state.clock * 0.7 + puff.phase) * 3 * drift;
       const pr = puff.r * k * (1 + 0.04 * Math.sin(state.clock * 1.6 + puff.phase));
+      // Two solid toon puffs per puff: a body and a smaller crown, rising slowly.
+      for (let layer = 0; layer < 3; layer++) {
+        const m = puffMeshes[pm++];
+        const sz = pr * (layer === 0 ? 0.72 : layer === 1 ? 0.5 : 0.34);
+        const off = layer === 0 ? 0 : (layer === 1 ? 0.35 : -0.3) * pr;
+        m.visible = true;
+        m.scale.setScalar(sz);
+        m.position.copy(
+          at({ x: px + off, y: py - off * 0.6 }, sz * 0.75 + layer * pr * 0.42 + Math.min(age, 3) * 3),
+        );
+        m.rotation.set(puff.angle, puff.angle * 0.7 + puff.spin * age, pi);
+      }
       let redness = 0;
       for (const w of seen) {
         const d = Math.hypot(px - w.x, py - w.y);
@@ -1001,14 +1237,14 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       }
       for (let layer = 0; layer < SMOKE_LAYERS; layer++) {
         const s = smokeSprites[n++];
-        const lift = 0.35 + layer * 0.42;
-        const size = pr * (2.5 - layer * 0.45);
+        const lift = 0.7 + layer * 0.42;
+        const size = pr * 2.3;
         s.visible = true;
         s.position.copy(at({ x: px, y: py }, pr * lift + (layer === 2 ? age * 6 : 0)));
         s.scale.set(size, size, 1);
         const mat = s.material as THREE.SpriteMaterial;
         mat.rotation = puff.angle + puff.spin * age + layer;
-        mat.opacity = layer === 2 ? 0.75 : 0.95;
+        mat.opacity = 0.5;
         // Lower layers a touch blue (shadowed), top layer white (moonlit), red where a beam hits.
         tmpColor.setRGB(0.82 + layer * 0.09, 0.88 + layer * 0.06, 0.98);
         tmpColor.lerp(new THREE.Color(1, 0.72, 0.76), redness * 0.35);
@@ -1032,33 +1268,6 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       r.halo.visible = show && p.spotted;
       r.halo.position.copy(at(p, 1));
     });
-  }
-
-  function updateSight(state: GameState): void {
-    const cov = state.coverage;
-    if (!cov || (state.phase !== 'reveal' && state.phase !== 'result')) {
-      sightLines.visible = false;
-      return;
-    }
-    const t = state.phase === 'reveal' ? state.phaseTime : TIMING.reveal;
-    const p = easeOutCubic((t - TIMING.sweepStart) / TIMING.sweepLength);
-    const fade = state.phase === 'result' ? Math.max(0, 1 - state.phaseTime / 0.5) : 1;
-    if (p <= 0 || fade <= 0) {
-      sightLines.visible = false;
-      return;
-    }
-    const lines = cov.lines.filter((l) => l.state !== 'wall');
-    const pos = new Float32Array(lines.length * 6);
-    const col = new Float32Array(lines.length * 6);
-    lines.forEach((l, i) => {
-      const tip = { x: l.from.x + (l.end.x - l.from.x) * p, y: l.from.y + (l.end.y - l.from.y) * p };
-      pos.set([l.from.x - CX, EYE_HEIGHT, l.from.y - CZ, tip.x - CX, 4, tip.y - CZ], i * 6);
-      tmpColor.set(l.state === 'cloud' ? C.mint : C.coral).multiplyScalar(fade);
-      col.set([tmpColor.r, tmpColor.g, tmpColor.b, tmpColor.r, tmpColor.g, tmpColor.b], i * 6);
-    });
-    sightGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    sightGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    sightLines.visible = true;
   }
 
   function updateEffects(state: GameState): void {
@@ -1155,7 +1364,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       updateCanister(state);
       updateSmoke(state);
       updateRunners(state);
-      updateSight(state);
+      sightLines.visible = false;
       updateEffects(state);
       updateCamera(state);
       composer.render();
@@ -1173,9 +1382,6 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       if (!raycaster.ray.intersectPlane(ground, hit)) return null;
       return { x: hit.x + CX, y: hit.z + CZ };
     },
-    project(p, h = 0) {
-      const v = at(p, h).project(camera);
-      return { x: ((v.x + 1) / 2) * cssW, y: ((1 - v.y) / 2) * cssH };
-    },
+    project,
   };
 }

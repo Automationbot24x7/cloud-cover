@@ -693,3 +693,42 @@ i {
   background: var(--muted);
   transform-origin: left center;
 }
+
+/* 3D renderer: "% hidden" tag placed beside the landing ring. */
+.world-tag {
+  position: absolute;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: calc(var(--u) * 4) calc(var(--u) * 12) calc(var(--u) * 6);
+  background: rgba(4, 12, 28, 0.88);
+  border: calc(var(--u) * 2) solid var(--tag, var(--cyan));
+  border-radius: calc(var(--u) * 8);
+  font-family: var(--display), sans-serif;
+  color: var(--tag, var(--cyan));
+}
+
+.world-tag b {
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 34);
+  line-height: 1;
+}
+
+.world-tag span {
+  font-weight: 700;
+  font-size: calc(var(--u) * 14);
+  letter-spacing: 0.12em;
+  color: var(--white);
+}
+
+.world-tag[data-grade='0'] {
+  --tag: var(--coral);
+}
+.world-tag[data-grade='1'] {
+  --tag: var(--amber);
+}
+.world-tag[data-grade='3'] {
+  --tag: var(--mint);
+}
