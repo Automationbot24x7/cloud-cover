@@ -25,6 +25,11 @@ for (const level of LEVELS) {
   const best = [0, 0, 0];
   const bestAt: string[] = ['', '', ''];
   const window = [0, 0, 0];
+  // The "smoke on the turret" shortcut: the best cover from a cloud landing near any watcher,
+  // versus the best from anywhere else. A late round should not be solvable by the shortcut.
+  const NEAR = level.cloudRadius + 90;
+  let bestNear = 0;
+  let bestFar = 0;
   let total = 0;
   let good = 0;
   let perfect = 0;
@@ -39,6 +44,9 @@ for (const level of LEVELS) {
       const thrown = computeThrow(level.thrower, target, walls, THROW);
       const cov = computeCoverage(level.watchers, samples, walls, [{ center: thrown.landing, radius: level.cloudRadius }]);
       const slot = Math.min(2, thrown.bounces);
+      const near = level.watchers.some((w) => Math.hypot(w.x - thrown.landing.x, w.y - thrown.landing.y) < NEAR);
+      if (near) bestNear = Math.max(bestNear, cov.ratio);
+      else bestFar = Math.max(bestFar, cov.ratio);
       if (cov.ratio > best[slot]) {
         best[slot] = cov.ratio;
         bestAt[slot] = `${deg} deg, power ${range}, lands (${Math.round(thrown.landing.x)},${Math.round(thrown.landing.y)})`;
@@ -63,5 +71,6 @@ for (const level of LEVELS) {
       ` | of all throws: good ${pct(good / total)} perfect ${pct(perfect / total)}` +
       ` | widest perfect power window: direct ${window[0]}u, 1-bank ${window[1]}u, 2+bank ${window[2]}u`,
   );
+  console.log(`   shortcut check: best cover with the cloud near a watcher ${pct(bestNear)}, elsewhere ${pct(bestFar)}`);
   console.log(`   direct ${bestAt[0]}\n   1-bank ${bestAt[1]}\n   2+bank ${bestAt[2]}`);
 }

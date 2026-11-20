@@ -819,6 +819,14 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     return line;
   };
   const routeLine = makeLine(C.white, 3.5, true, 0.85);
+  const trailMat = new LineMaterial({ linewidth: 7, vertexColors: true, transparent: true, depthWrite: false });
+  trailMat.blending = THREE.AdditiveBlending;
+  lineMats.push(trailMat);
+  const trail = new Line2(new LineGeometry(), trailMat);
+  trail.frustumCulled = false;
+  trail.visible = false;
+  trail.renderOrder = 5;
+  scene.add(trail);
   const chargeLine = makeLine(C.cyan, 6, false);
   const stubLine = makeLine(C.amber, 5, false, 0.9);
 
@@ -975,7 +983,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const partGeo = new THREE.BufferGeometry();
   const parts = new THREE.Points(
     partGeo,
-    new THREE.PointsMaterial({ size: 9, vertexColors: true, transparent: true, depthWrite: false, map: haloTex }),
+    new THREE.PointsMaterial({ size: 16, vertexColors: true, transparent: true, depthWrite: false, map: haloTex }),
   );
   parts.frustumCulled = false;
   scene.add(parts);
@@ -1180,6 +1188,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   function updateCanister(state: GameState): void {
     const flying = state.phase === 'flight' && !!state.thrown;
     canister.visible = flying;
+    if (!flying) trail.visible = false;
     canisterLight.intensity = flying ? 6 : 0;
     if (!flying || !state.thrown) return;
     // A low arc between bounce points so the throw reads as thrown, not slid.
@@ -1187,6 +1196,42 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     const hop = Math.sin(Math.PI * ((k * (state.thrown.bounces + 1)) % 1)) * 34 * (1 - k * 0.6);
     canister.position.copy(at(state.canister, 8 + hop));
     canister.rotation.set(state.phaseTime * 9, state.phaseTime * 14, 0);
+    // A glowing trail: the last stretch of the real throw path behind the canister.
+    const thrown = state.thrown;
+    const eased = 1 - Math.pow(1 - k, 1.6);
+    const head = thrown.length * eased;
+    const tail = Math.max(0, head - 220);
+    const pts: Vec[] = [];
+    let walked = 0;
+    for (let i = 1; i < thrown.path.length; i++) {
+      const p0 = thrown.path[i - 1];
+      const p1 = thrown.path[i];
+      const seg = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+      const s0 = walked;
+      const s1 = walked + seg;
+      if (s1 >= tail && s0 <= head && seg > 0) {
+        const t0 = Math.max(0, (tail - s0) / seg);
+        const t1 = Math.min(1, (head - s0) / seg);
+        if (!pts.length) pts.push({ x: p0.x + (p1.x - p0.x) * t0, y: p0.y + (p1.y - p0.y) * t0 });
+        pts.push({ x: p0.x + (p1.x - p0.x) * t1, y: p0.y + (p1.y - p0.y) * t1 });
+      }
+      walked = s1;
+    }
+    if (pts.length >= 2) {
+      const pos: number[] = [];
+      const col: number[] = [];
+      pts.forEach((v, i) => {
+        const f = (i + 1) / pts.length;
+        pos.push(v.x - CX, 10, v.y - CZ);
+        col.push(0.5 * f, 0.88 * f, 1.0 * f);
+      });
+      trail.geometry.dispose();
+      const g = new LineGeometry();
+      g.setPositions(pos);
+      g.setColors(col);
+      trail.geometry = g;
+      trail.visible = true;
+    }
   }
 
   function updateSmoke(state: GameState): void {
@@ -1261,7 +1306,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       r.card.visible = r.shadow.visible = show;
       const bob = p.running ? Math.abs(Math.sin(state.clock * 16 + i)) * 4 : 0;
       r.card.position.copy(at(p, 3 + p.hop + bob));
-      r.card.rotation.set(-Math.PI / 2, 0, -(p.heading + Math.PI / 2));
+      const stride = p.running ? Math.sin(state.clock * 18 + i * 1.7) : 0;
+      r.card.rotation.set(-Math.PI / 2, 0, -(p.heading + Math.PI / 2) + stride * 0.16);
+      r.card.scale.set(1 - Math.abs(stride) * 0.06, 1 + Math.abs(stride) * 0.08, 1);
       (r.card.material as THREE.MeshBasicMaterial).opacity = p.alpha;
       (r.card.material as THREE.MeshBasicMaterial).color.set(p.spotted ? 0xffb0b8 : 0xffffff);
       r.shadow.position.copy(at({ x: p.x + 4, y: p.y + 6 }, 0.5));
@@ -1276,7 +1323,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     const col = new Float32Array(n * 3);
     state.particles.forEach((p, i) => {
       const life = Math.max(0, p.life / p.max);
-      pos.set([p.x - CX, 10 + (1 - life) * 30, p.y - CZ], i * 3);
+      pos.set([p.x - CX, 14 + (1 - life) * 46, p.y - CZ], i * 3);
       tmpColor.setStyle(p.color.startsWith('rgba') ? '#f4f9ff' : p.color).multiplyScalar(life);
       col.set([tmpColor.r, tmpColor.g, tmpColor.b], i * 3);
     });
