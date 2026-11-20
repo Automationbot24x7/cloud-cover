@@ -60,17 +60,29 @@ export const GRADE_LABEL: Record<Grade, string> = {
   3: 'PERFECT COVER',
 };
 
+/** The puffs that make up one cloud: a dense core, a ring of billows and a few stray wisps. */
 function makePuffs(radius: number, seed: number): Puff[] {
   const rand = mulberry(seed);
   const puffs: Puff[] = [];
-  const count = 9;
-  for (let i = 0; i < count; i++) {
-    const angle = (i / count) * Math.PI * 2 + rand() * 0.5;
-    const r = radius * (0.38 + rand() * 0.14);
-    const d = radius * 1.02 - r;
-    puffs.push({ dx: Math.cos(angle) * d, dy: Math.sin(angle) * d, r, phase: rand() * 6.28 });
+  const puff = (dx: number, dy: number, r: number, delay: number, sprite: number): void => {
+    puffs.push({ dx, dy, r, phase: rand() * 6.28, delay, sprite, angle: rand() * 6.28, spin: (rand() - 0.5) * 0.5 });
+  };
+  for (let i = 0; i < 3; i++) {
+    const a = rand() * 6.28;
+    puff(Math.cos(a) * radius * 0.18, Math.sin(a) * radius * 0.18, radius * (0.62 + rand() * 0.12), i * 0.03, 0);
   }
-  puffs.push({ dx: 0, dy: 0, r: radius * 0.62, phase: rand() * 6.28 });
+  const ring = 10;
+  for (let i = 0; i < ring; i++) {
+    const a = (i / ring) * Math.PI * 2 + rand() * 0.4;
+    const r = radius * (0.36 + rand() * 0.14);
+    const d = radius * 1.0 - r * 0.8;
+    puff(Math.cos(a) * d, Math.sin(a) * d, r, 0.04 + rand() * 0.12, i % 2);
+  }
+  for (let i = 0; i < 4; i++) {
+    const a = rand() * 6.28;
+    const d = radius * (0.95 + rand() * 0.2);
+    puff(Math.cos(a) * d, Math.sin(a) * d, radius * (0.2 + rand() * 0.1), 0.12 + rand() * 0.2, 1);
+  }
   return puffs;
 }
 
@@ -145,6 +157,7 @@ export function createGame(hooks: GameHooks = {}): Game {
     particles: [],
     rings: [],
     shake: 0,
+    flash: 0,
   };
 
   let timeAtThrow = 0;
@@ -313,6 +326,7 @@ export function createGame(hooks: GameHooks = {}): Game {
     state.shownScore += (state.score - state.shownScore) * Math.min(1, dt * 9);
     if (Math.abs(state.score - state.shownScore) < 0.6) state.shownScore = state.score;
     state.shake = Math.max(0, state.shake - dt * 30);
+    state.flash = Math.max(0, state.flash - dt * 2.2);
 
     for (const p of state.particles) {
       p.x += p.vx * dt;
@@ -410,6 +424,16 @@ export function createGame(hooks: GameHooks = {}): Game {
           state.results.push(result);
           state.score += result.points;
           sfx.result(result.grade);
+          if (result.grade === 3 && state.cloud) {
+            // Perfect cover: make it feel like one.
+            state.flash = 0.55;
+            state.shake = 12;
+            const c = state.cloud.center;
+            state.rings.push({ x: c.x, y: c.y, life: 0.8, max: 0.8, from: state.cloud.radius, to: state.cloud.radius * 3.2, color: COLOR.mint });
+            burst(c, 46, 620, COLOR.mint, 4.5);
+            const { b } = state.level.crossing;
+            burst(b, 30, 380, COLOR.cyan, 3.5);
+          }
           hooks.onResult?.(result);
           setPhase('result');
         }

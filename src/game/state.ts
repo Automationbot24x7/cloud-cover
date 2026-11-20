@@ -23,6 +23,13 @@ export interface Puff {
   dy: number;
   r: number;
   phase: number;
+  /** Seconds after landing before this puff starts to swell. */
+  delay: number;
+  /** Which smoke sprite to draw (0 or 1). */
+  sprite: number;
+  /** Starting rotation and slow spin, radians and radians per second. */
+  angle: number;
+  spin: number;
 }
 
 export interface Particle {
@@ -109,6 +116,8 @@ export interface GameState {
   particles: Particle[];
   rings: Ring[];
   shake: number;
+  /** 0..1 white flash over the whole field, for a perfect cover. */
+  flash: number;
 }
 
 /** World units of throw distance gained per second of holding. */

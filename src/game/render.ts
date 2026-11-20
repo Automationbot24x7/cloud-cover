@@ -1,6 +1,8 @@
 import floorUrl from '../assets/floor.jpg';
 import roofUrl from '../assets/roof.jpg';
 import runnerUrl from '../assets/runner.png';
+import smokeAUrl from '../assets/smoke-a.png';
+import smokeBUrl from '../assets/smoke-b.png';
 import type { SightLine, Vec } from '../core/types';
 import { ARENA, WORLD } from './levels';
 import { SQUAD_SIZE, TIMING, type GameState } from './state';
@@ -33,6 +35,7 @@ const ART = {
   floor: loadImage(floorUrl),
   roof: loadImage(roofUrl),
   runner: loadImage(runnerUrl),
+  smoke: [loadImage(smokeAUrl), loadImage(smokeBUrl)],
 };
 const patterns = new WeakMap<CanvasRenderingContext2D, { floor?: CanvasPattern; roof?: CanvasPattern }>();
 
@@ -278,6 +281,38 @@ function drawDangerFans(ctx: CanvasRenderingContext2D, state: GameState, alpha: 
       }
     }
   }
+}
+
+/** A bright scan beam per watcher, sweeping across the part of the crossing it can still see. */
+function drawScanBeams(ctx: CanvasRenderingContext2D, state: GameState, alpha: number): void {
+  if (alpha <= 0) return;
+  const perWatcher = state.samples.length;
+  const lines = state.charging && state.live ? state.live.lines : state.baseline.lines;
+  ctx.save();
+  ctx.lineCap = 'round';
+  for (let w = 0; w < state.level.watchers.length; w++) {
+    const open: number[] = [];
+    for (let i = 0; i < perWatcher; i++) if (lines[w * perWatcher + i].state === 'open') open.push(i);
+    if (!open.length) continue;
+    const from = state.level.watchers[w];
+    const t = 0.5 + 0.5 * Math.sin(state.clock * 1.8 + w * 2.1);
+    const idx = open[Math.min(open.length - 1, Math.floor(t * open.length))];
+    const to = state.samples[idx];
+    const g = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+    g.addColorStop(0, `rgba(255, 90, 106, ${0.9 * alpha})`);
+    g.addColorStop(1, `rgba(255, 90, 106, ${0.15 * alpha})`);
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+    ctx.fillStyle = `rgba(255, 90, 106, ${0.8 * alpha})`;
+    ctx.beginPath();
+    ctx.arc(to.x, to.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 /** Sight lines the marker cloud would cut, as faint green rays stopping at the cloud edge. */
@@ -559,36 +594,61 @@ function drawCloud(ctx: CanvasRenderingContext2D, state: GameState): void {
   const cloud = state.cloud;
   if (!cloud) return;
   const age = state.phase === 'reveal' ? state.phaseTime : TIMING.reveal + state.phaseTime;
-  const grow = easeOutBack(age / TIMING.bloom);
   const { center, radius } = cloud;
+  const sprites = ART.smoke;
+  const ready = sprites.every((img) => img.complete && img.naturalWidth > 0);
 
   ctx.save();
   ctx.translate(center.x, center.y);
-  ctx.scale(grow, grow);
 
-  // Solid core: the true blocking radius, so what you see is what counts.
-  const core = ctx.createRadialGradient(0, 0, radius * 0.2, 0, 0, radius);
-  core.addColorStop(0, 'rgba(244, 249, 255, 0.95)');
-  core.addColorStop(0.8, 'rgba(226, 240, 255, 0.86)');
-  core.addColorStop(1, 'rgba(226, 240, 255, 0.55)');
+  // Ground shadow under the cloud so it sits on the map, not on the glass.
+  const shadow = ctx.createRadialGradient(10, 14, radius * 0.3, 10, 14, radius * 1.25);
+  shadow.addColorStop(0, `rgba(2, 8, 20, ${0.45 * clamp01(age / TIMING.bloom)})`);
+  shadow.addColorStop(1, 'rgba(2, 8, 20, 0)');
+  ctx.fillStyle = shadow;
+  ctx.beginPath();
+  ctx.arc(10, 14, radius * 1.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Solid core at the true blocking radius, so what you see is what counts.
+  const grow = easeOutBack(age / TIMING.bloom);
+  const core = ctx.createRadialGradient(0, 0, radius * 0.2, 0, 0, radius * grow);
+  core.addColorStop(0, 'rgba(240, 247, 255, 0.92)');
+  core.addColorStop(0.85, 'rgba(214, 232, 252, 0.78)');
+  core.addColorStop(1, 'rgba(214, 232, 252, 0.0)');
   ctx.fillStyle = core;
   ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.arc(0, 0, Math.max(1, radius * grow), 0, Math.PI * 2);
   ctx.fill();
 
   for (const puff of state.puffs) {
-    const wob = Math.sin(state.clock * 1.3 + puff.phase) * 4;
-    const x = puff.dx + wob;
-    const y = puff.dy + Math.cos(state.clock * 1.1 + puff.phase) * 3;
-    const g = ctx.createRadialGradient(x - puff.r * 0.25, y - puff.r * 0.3, puff.r * 0.1, x, y, puff.r);
-    g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-    g.addColorStop(0.7, 'rgba(232, 243, 255, 0.75)');
-    g.addColorStop(1, 'rgba(210, 230, 255, 0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, puff.r, 0, Math.PI * 2);
-    ctx.fill();
+    const k = easeOutBack((age - puff.delay) / (TIMING.bloom * 1.4));
+    if (k <= 0) continue;
+    // Puffs burst outward from the canister and then drift and breathe.
+    const drift = Math.min(1, age / 4);
+    const x = puff.dx * k + Math.sin(state.clock * 0.9 + puff.phase) * 4 * drift;
+    const y = puff.dy * k + Math.cos(state.clock * 0.7 + puff.phase) * 3 * drift;
+    const r = puff.r * k * (1 + 0.04 * Math.sin(state.clock * 1.6 + puff.phase));
+    if (ready) {
+      const img = sprites[puff.sprite % sprites.length];
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(puff.angle + puff.spin * age);
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(img, -r * 1.25, -r * 1.25, r * 2.5, r * 2.5);
+      ctx.restore();
+    } else {
+      const g = ctx.createRadialGradient(x - r * 0.25, y - r * 0.3, r * 0.1, x, y, r);
+      g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+      g.addColorStop(0.7, 'rgba(232, 243, 255, 0.75)');
+      g.addColorStop(1, 'rgba(210, 230, 255, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
+
   ctx.restore();
 }
 
@@ -682,13 +742,14 @@ function drawSquad(ctx: CanvasRenderingContext2D, state: GameState): void {
       ctx.translate(x, y);
       ctx.rotate(Math.atan2(uy, ux) + Math.PI / 2);
       if (running && !spotted) ctx.rotate(Math.sin(state.clock * 22 + i) * 0.08);
-      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
       if (spotted) {
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.fillStyle = 'rgba(255, 90, 106, 0.55)';
-        ctx.fillRect(-size / 2, -size / 2, size, size);
-        ctx.globalCompositeOperation = 'source-over';
+        // A red halo under a spotted runner.
+        ctx.fillStyle = 'rgba(255, 90, 106, 0.45)';
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
+        ctx.fill();
       }
+      ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
       ctx.restore();
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -753,6 +814,7 @@ export function renderWorld(ctx: CanvasRenderingContext2D, state: GameState): vo
           ? Math.max(0, 0.7 - state.phaseTime * 2.5)
           : 0;
   drawDangerFans(ctx, state, fanAlpha);
+  drawScanBeams(ctx, state, state.phase === 'aim' || state.phase === 'intro' || state.phase === 'attract' ? 1 : 0);
   drawBlocks(ctx, state);
   drawSquad(ctx, state);
   drawWatchers(ctx, state);
@@ -764,4 +826,8 @@ export function renderWorld(ctx: CanvasRenderingContext2D, state: GameState): vo
   drawCanister(ctx, state);
   drawEffects(ctx, state);
   ctx.restore();
+  if (state.flash > 0) {
+    ctx.fillStyle = `rgba(220, 255, 240, ${state.flash * 0.45})`;
+    ctx.fillRect(0, 0, WORLD.w, WORLD.h);
+  }
 }
