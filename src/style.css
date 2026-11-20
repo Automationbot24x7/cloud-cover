@@ -51,7 +51,8 @@ body {
   box-shadow: 0 0 calc(var(--u) * 80) rgba(25, 167, 255, 0.12);
 }
 
-#world {
+#world,
+#world3d {
   position: absolute;
   inset: 0;
   width: 100%;
