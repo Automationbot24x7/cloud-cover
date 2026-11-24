@@ -940,7 +940,10 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       new THREE.PlaneGeometry(88, 88),
       new THREE.MeshBasicMaterial({ map: runnerTex, transparent: true, depthWrite: false }),
     );
-    card.renderOrder = 4;
+    // Drawn after the smoke and without depth test, so the player can always see the squad:
+    // faint while hidden inside the cloud, solid in the open.
+    card.renderOrder = 9;
+    (card.material as THREE.MeshBasicMaterial).depthTest = false;
     const shadow = new THREE.Mesh(
       new THREE.CircleGeometry(28, 24),
       new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }),
@@ -1298,9 +1301,36 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     });
   }
 
+  // One red "seen by" line per runner, from the watcher that spotted them through the gap.
+  const seenLines: Line2[] = [];
+  for (let i = 0; i < 5; i++) {
+    const l = makeLine(C.coral, 5, false, 0.95);
+    (l.material as LineMaterial).depthTest = false;
+    l.renderOrder = 10;
+    seenLines.push(l);
+  }
+
   function updateRunners(state: GameState): void {
     const poses = squadPoses(state, 1.75);
+    const cloud = state.cloud;
     poses.forEach((p, i) => {
+      // Inside the cloud: draw faint, so "hidden" reads as hidden while the player can still count heads.
+      const hidden = !!cloud && Math.hypot(p.x - cloud.center.x, p.y - cloud.center.y) < cloud.radius * 0.95;
+      const line = seenLines[i];
+      line.visible = false;
+      if (p.spotted && (state.phase === 'reveal' || state.phase === 'result')) {
+        const clouds = cloud ? [cloud] : [];
+        const seer = state.level.watchers.find((w) => {
+          const d = Math.hypot(p.x - w.x, p.y - w.y) || 1;
+          const dir = { x: (p.x - w.x) / d, y: (p.y - w.y) / d };
+          if (raycast(w, dir, d - 1, state.walls)) return false;
+          return !clouds.some((c) => segmentCircleEntry(w, p, c.center, c.radius));
+        });
+        if (seer) {
+          setLine(line, [seer, p], EYE_HEIGHT * 0.6);
+          (line.material as LineMaterial).opacity = 0.6 + 0.4 * Math.sin(state.clock * 14);
+        }
+      }
       const r = runners[i];
       const show = state.phase !== 'summary' && state.phase !== 'attract';
       r.card.visible = r.shadow.visible = show;
@@ -1309,7 +1339,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const stride = p.running ? Math.sin(state.clock * 18 + i * 1.7) : 0;
       r.card.rotation.set(-Math.PI / 2, 0, -(p.heading + Math.PI / 2) + stride * 0.16);
       r.card.scale.set(1 - Math.abs(stride) * 0.06, 1 + Math.abs(stride) * 0.08, 1);
-      (r.card.material as THREE.MeshBasicMaterial).opacity = p.alpha;
+      (r.card.material as THREE.MeshBasicMaterial).opacity = p.spotted ? 1 : hidden ? 0.45 : p.alpha;
       (r.card.material as THREE.MeshBasicMaterial).color.set(p.spotted ? 0xffb0b8 : 0xffffff);
       r.shadow.position.copy(at({ x: p.x + 4, y: p.y + 6 }, 0.5));
       r.halo.visible = show && p.spotted;

@@ -2,7 +2,8 @@ import { sfx } from './audio';
 import { renderBoardRows } from './boardRows';
 import { GRADE_LABEL } from './game';
 import type { Level } from './levels';
-import { SQUAD_SIZE, type GameState, type Grade, type RoundResult } from './state';
+import { squadPoses } from './squad';
+import { SQUAD_SIZE, TIMING, type GameState, type Grade, type RoundResult } from './state';
 import { loadToday, saveScore } from './store';
 
 const GRADE_COLOR: Record<Grade, string> = {
@@ -158,6 +159,26 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
   return {
     frame(state) {
       score.textContent = Math.round(state.shownScore).toLocaleString('en-US');
+      // Squad tally: one icon per runner, filled safe or spotted as each one finishes.
+      const tally = el('tally');
+      const running = (state.phase === 'reveal' && state.phaseTime >= TIMING.runStart - 0.2) || state.phase === 'result';
+      tally.hidden = !running;
+      if (running) {
+        const poses = squadPoses(state);
+        const icons = el('tally-icons').children;
+        let safe = 0;
+        let done = 0;
+        poses.forEach((p, i) => {
+          const icon = icons[i] as HTMLElement | undefined;
+          if (!icon) return;
+          const stateName = p.spotted ? 'spotted' : p.arrived ? 'safe' : '';
+          icon.className = stateName;
+          if (p.arrived) safe++;
+          if (p.spotted || p.arrived) done++;
+        });
+        el('tally-label').textContent = done < poses.length ? 'SQUAD MOVING' : `${safe}/${poses.length} SAFE`;
+        tally.dataset.result = done < poses.length ? '' : safe === poses.length ? 'all' : safe === 0 ? 'none' : 'some';
+      }
       const share = state.phase === 'aim' ? Math.max(0, state.timeLeft / state.level.seconds) : state.phase === 'intro' ? 1 : 0;
       timerFill.style.transform = `scaleX(${share})`;
       timerFill.classList.toggle('low', state.phase === 'aim' && state.timeLeft <= 3);

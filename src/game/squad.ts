@@ -11,6 +11,8 @@ export interface SquadPose {
   /** Height of a celebration hop, world units (0 when standing). */
   hop: number;
   running: boolean;
+  /** True once a runner who made it has reached the far pad. */
+  arrived: boolean;
 }
 
 /** Where each squad member stands while waiting in cover: [distance behind the line, sideways offset]. */
@@ -52,6 +54,7 @@ export function squadPoses(state: GameState, spread = 1): SquadPose[] {
     let spotted = false;
     let moving = false;
     let hop = 0;
+    let arrivedFlag = false;
     if (running && runner) {
       const local = (t - TIMING.runStart - runner.delay) / TIMING.runLength;
       moving = local > 0 && local < 1;
@@ -68,6 +71,7 @@ export function squadPoses(state: GameState, spread = 1): SquadPose[] {
       } else {
         const arrived = t - TIMING.runStart - runner.delay - TIMING.runLength * 0.85;
         if (arrived > 0) hop = Math.abs(Math.sin(arrived * 9 + i)) * 14 * Math.max(0, 1 - arrived / 1.6);
+        arrivedFlag = arrived > -TIMING.runLength * 0.15;
       }
     }
     poses.push({
@@ -78,6 +82,7 @@ export function squadPoses(state: GameState, spread = 1): SquadPose[] {
       alpha,
       hop,
       running: moving,
+      arrived: arrivedFlag,
     });
   }
   return poses;

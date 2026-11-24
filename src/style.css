@@ -739,3 +739,63 @@ i {
 .world-tag[data-grade='3'] {
   --tag: var(--mint);
 }
+
+/* Squad tally during the run: five icons fill in safe (cyan) or spotted (coral). */
+.tally {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--u) * 46);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 18);
+  padding: calc(var(--u) * 10) calc(var(--u) * 24);
+  background: rgba(4, 12, 28, 0.85);
+  border-bottom: calc(var(--u) * 4) solid var(--muted);
+  font-family: var(--display), sans-serif;
+}
+
+.tally[data-result='all'] {
+  border-bottom-color: var(--mint);
+}
+.tally[data-result='some'] {
+  border-bottom-color: var(--amber);
+}
+.tally[data-result='none'] {
+  border-bottom-color: var(--coral);
+}
+
+.tally-icons {
+  display: flex;
+  gap: calc(var(--u) * 10);
+}
+
+.tally-icons i {
+  display: block;
+  width: calc(var(--u) * 26);
+  height: calc(var(--u) * 26);
+  margin: 0;
+  transform: none;
+  border-radius: 50%;
+  border: calc(var(--u) * 3) solid rgba(155, 182, 220, 0.5);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tally-icons i.safe {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.tally-icons i.spotted {
+  background: var(--coral);
+  border-color: var(--coral);
+}
+
+.tally-label {
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 30);
+  letter-spacing: 0.04em;
+  min-width: calc(var(--u) * 150);
+}
