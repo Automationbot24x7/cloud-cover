@@ -256,6 +256,8 @@ export interface Renderer3D {
   screenToWorld(clientX: number, clientY: number): Vec | null;
   /** Screen position (CSS pixels relative to the canvas) of a world point at a height. */
   project(p: Vec, h?: number): { x: number; y: number };
+  /** Release the GPU and remove the canvas and overlays (used when switching to safe mode). */
+  dispose(): void;
 }
 
 export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
@@ -275,8 +277,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   scene.fog = new THREE.Fog(C.fog, 2300, 5600);
 
   const camera = new THREE.PerspectiveCamera(30, 16 / 9, 10, 9000);
-  const BASE_CAM = new THREE.Vector3(0, 1720, 1010);
-  const LOOK = new THREE.Vector3(0, 0, 4);
+  // 20 degrees off vertical, close enough that the field fills the space between the top bar and the hint strip.
+  const LOOK = new THREE.Vector3(0, 0, -20);
+  const BASE_CAM = new THREE.Vector3(0, 1780 * Math.cos(0.349), -20 + 1780 * Math.sin(0.349));
   camera.position.copy(BASE_CAM);
   camera.lookAt(LOOK);
 
@@ -506,14 +509,6 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     depthWrite: false,
     side: THREE.DoubleSide,
   });
-  const beamSpillMat = new THREE.MeshBasicMaterial({
-    color: C.coral,
-    transparent: true,
-    opacity: 0.045,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
   const beamVolumeMat = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -535,6 +530,10 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
         gl_FragColor = vec4(color * strength * vFade, 1.0);
       }`,
   });
+
+  // Dim spill: the searchlight's wider glow, fading to nothing a little past the crossing.
+  const beamSpillMat = beamVolumeMat.clone();
+  beamSpillMat.uniforms.strength.value = 0.11;
 
   function disposeGroup(g: THREE.Object3D): void {
     g.traverse((o) => {
@@ -650,7 +649,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       map: laneTex,
       color: C.cyan,
       transparent: true,
-      opacity: 0.85,
+      opacity: 1,
       depthWrite: false,
     });
     laneMesh = new THREE.Mesh(new THREE.PlaneGeometry(len, 60), laneMat);
@@ -660,7 +659,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     levelGroup.add(laneMesh);
     const laneBase = new THREE.Mesh(
       new THREE.PlaneGeometry(len, 64),
-      new THREE.MeshBasicMaterial({ color: C.blue, transparent: true, opacity: 0.12, depthWrite: false }),
+      new THREE.MeshBasicMaterial({ color: C.blue, transparent: true, opacity: 0.24, depthWrite: false }),
     );
     laneBase.rotation.copy(laneMesh.rotation);
     laneBase.position.copy(at(mid, 0.8));
@@ -898,6 +897,15 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const toon = toonRamp();
   const puffGeos = [lumpySphere(1), lumpySphere(2), lumpySphere(3)];
   const puffMat = new THREE.MeshToonMaterial({ color: 0xdfe9f6, gradientMap: toon, emissive: 0x1b2a44 });
+  // A faint blue rim on the smoke's silhouette, so it sits in the night scene and matches the title art.
+  puffMat.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      `float rimK = 1.0 - abs(dot(normalize(normal), normalize(vViewPosition)));
+      outgoingLight += vec3(0.3, 0.62, 1.0) * pow(rimK, 2.6) * 0.75;
+      #include <opaque_fragment>`,
+    );
+  };
   const puffMeshes: THREE.Mesh[] = [];
   const ensurePuffMeshes = (n: number): void => {
     while (puffMeshes.length < n) {
@@ -963,6 +971,21 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   tag.className = 'world-tag';
   tag.hidden = true;
   canvas.parentElement?.appendChild(tag);
+  // "YOU" above the thrower while aiming, and a short "SPOTTED" flash over each runner a watcher catches.
+  const you = document.createElement('div');
+  you.className = 'world-you';
+  you.textContent = 'YOU';
+  you.hidden = true;
+  canvas.parentElement?.appendChild(you);
+  const spotTags = Array.from({ length: 5 }, () => {
+    const d = document.createElement('div');
+    d.className = 'world-spotted';
+    d.textContent = 'SPOTTED';
+    d.hidden = true;
+    canvas.parentElement?.appendChild(d);
+    return d;
+  });
+  const spottedAt: number[] = [-1, -1, -1, -1, -1];
   // Power ring around the thrower while charging.
   const powerRing = new THREE.Mesh(
     new THREE.RingGeometry(46, 54, 64, 1, 0, 0.01),
@@ -1004,7 +1027,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     return { x: ((v.x + 1) / 2) * cssW, y: ((1 - v.y) / 2) * cssH };
   }
 
-  function setFan(mesh: THREE.Mesh, origin: Vec, pts: Vec[], height: number, volume: boolean): void {
+  function setFan(mesh: THREE.Mesh, origin: Vec, pts: Vec[], height: number, volume: boolean, edgeFade = 0.08): void {
     const n = pts.length;
     const pos = new Float32Array((n + 1) * 3);
     pos[0] = origin.x - CX;
@@ -1019,10 +1042,10 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     for (let i = 1; i < n; i++) idx.push(0, i, i + 1);
     const g = mesh.geometry as THREE.BufferGeometry;
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    if (volume) {
+    if (volume || mesh.material === beamSpillMat) {
       const fade = new Float32Array(n + 1);
       fade[0] = 1;
-      for (let i = 1; i <= n; i++) fade[i] = 0.08;
+      for (let i = 1; i <= n; i++) fade[i] = edgeFade;
       g.setAttribute('fade', new THREE.BufferAttribute(fade, 1));
     }
     g.setIndex(idx);
@@ -1056,8 +1079,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const wrap = (v: number): number => Math.atan2(Math.sin(v), Math.cos(v));
       const span = Math.max(Math.abs(wrap(angA - angM)), Math.abs(wrap(angB - angM)));
       // Dim spill: the whole searchlight, out to the walls.
-      const spillPts = visibilityFan(w, mid, span + 0.12, 72, state.walls, clouds, 1900);
-      setFan(rig.spill, w, spillPts, 0.4, false);
+      const reach = Math.max(Math.hypot(a.x - w.x, a.y - w.y), Math.hypot(b.x - w.x, b.y - w.y)) + 160;
+      const spillPts = visibilityFan(w, mid, span + 0.12, 72, state.walls, clouds, reach);
+      setFan(rig.spill, w, spillPts, 0.4, false, 0);
       // Bright fan: only what the watcher can see of the crossing, stopping just past the lane,
       // so lit = dangerous and nothing else glows.
       const raw = visibilityFan(w, mid, span + 0.02, 96, state.walls, clouds, 1900);
@@ -1108,6 +1132,12 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       throwerArrow.rotation.y = -aimAngle;
       if (throwerFigure) throwerFigure.rotation.z = -(aimAngle + Math.PI / 2);
       throwerArrow.visible = aiming || state.phase === 'intro';
+      you.hidden = !(aiming || state.phase === 'intro');
+      if (!you.hidden) {
+        const sp = project(t, 70);
+        you.style.left = `${sp.x}px`;
+        you.style.top = `${sp.y}px`;
+      }
     }
     const path = state.preview.path;
     const full = state.level.assist === 'full';
@@ -1168,8 +1198,8 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       powerRing.position.copy(at(state.level.thrower, 7));
       (powerRing.material as THREE.MeshBasicMaterial).color.set(share > 0.85 ? C.amber : C.cyan);
       powerRing.visible = true;
-      // The readout teaches what "covered" means in the first two rounds, then the player reads it alone.
-      if (state.live && state.roundIndex < 2) {
+      // Live readout beside the landing ring, every round (same as the flat renderer).
+      if (state.live) {
         const pct = Math.round(state.live.ratio * 100);
         const edge = project({ x: state.marker.x + r, y: state.marker.y }, 4);
         tag.hidden = false;
@@ -1344,6 +1374,17 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       r.shadow.position.copy(at({ x: p.x + 4, y: p.y + 6 }, 0.5));
       r.halo.visible = show && p.spotted;
       r.halo.position.copy(at(p, 1));
+      const tagEl = spotTags[i];
+      const running = state.phase === 'reveal' || state.phase === 'result';
+      if (!running || !p.spotted) spottedAt[i] = -1;
+      else if (spottedAt[i] < 0) spottedAt[i] = state.clock;
+      const since = spottedAt[i] < 0 ? -1 : state.clock - spottedAt[i];
+      tagEl.hidden = since < 0 || since > 1.1;
+      if (!tagEl.hidden) {
+        const sp = project(p, 40);
+        tagEl.style.left = `${sp.x}px`;
+        tagEl.style.top = `${sp.y}px`;
+      }
     });
   }
 
@@ -1460,5 +1501,13 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       return { x: hit.x + CX, y: hit.z + CZ };
     },
     project,
+    dispose() {
+      tag.remove();
+      you.remove();
+      spotTags.forEach((d) => d.remove());
+      composer.dispose();
+      renderer.dispose();
+      canvas.remove();
+    },
   };
 }

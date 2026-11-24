@@ -20,17 +20,86 @@ import { registerServiceWorker } from './pwa';
 const canvas = document.getElementById('world') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
-// 3D diorama renderer, behind a switch while it is being tested: add ?r=3d to the address.
-const use3d = new URLSearchParams(location.search).get('r') === '3d';
+// 3D diorama renderer by default. The flat 2D renderer is the safe mode: ?r=2d forces it, and the game
+// drops to it on its own if WebGL is missing, the GPU context is lost, or the frame rate stays low.
+const params = new URLSearchParams(location.search);
+const SAFE_KEY = 'cloudcover-safe-mode';
+const readSafe = (): boolean => {
+  try {
+    return sessionStorage.getItem(SAFE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const writeSafe = (on: boolean): void => {
+  try {
+    if (on) sessionStorage.setItem(SAFE_KEY, '1');
+    else sessionStorage.removeItem(SAFE_KEY);
+  } catch {
+    // Private windows may block storage; the switch still applies to this page.
+  }
+};
 let r3d: Renderer3D | null = null;
-if (use3d) {
-  const canvas3d = document.createElement('canvas');
-  canvas3d.id = 'world3d';
-  canvas.insertAdjacentElement('beforebegin', canvas3d);
-  canvas.style.display = 'none';
-  r3d = createRenderer3D(canvas3d);
+if (params.get('r') !== '2d' && (params.get('r') === '3d' || !readSafe())) {
+  try {
+    const canvas3d = document.createElement('canvas');
+    canvas3d.id = 'world3d';
+    canvas.insertAdjacentElement('beforebegin', canvas3d);
+    r3d = createRenderer3D(canvas3d);
+    canvas.style.display = 'none';
+    document.body.classList.add('r3d');
+    canvas3d.addEventListener('webglcontextlost', (event) => {
+      event.preventDefault();
+      useSafeMode('graphics context lost');
+    });
+    bindInput(canvas3d);
+  } catch (error) {
+    document.getElementById('world3d')?.remove();
+    console.warn('3D renderer unavailable, using safe mode', error);
+    r3d = null;
+  }
 }
-const input: HTMLCanvasElement = r3d ? r3d.canvas : canvas;
+
+/** Switch to the flat renderer for the rest of this browser session. */
+function useSafeMode(reason: string): void {
+  if (!r3d) return;
+  console.warn(`Cloud Cover safe mode: ${reason}`);
+  r3d.dispose();
+  r3d = null;
+  canvas.style.display = '';
+  document.body.classList.remove('r3d');
+  writeSafe(true);
+  resize();
+}
+
+/** Leave safe mode: reload into the 3D renderer. */
+function useFullGraphics(): void {
+  writeSafe(false);
+  const url = new URL(location.href);
+  url.searchParams.delete('r');
+  location.replace(url.toString());
+}
+
+// Frame-rate watchdog: three slow 2-second windows in a row (under 28 fps) switch to safe mode.
+const watchdog = { start: 0, frames: 0, strikes: 0, since: performance.now() };
+function watchFrameRate(now: number, gap: number): void {
+  if (!r3d || document.hidden || now - watchdog.since < 4000) return;
+  if (gap > 400) {
+    // A long pause is a hidden tab or a debugger, not a slow GPU: start the window again.
+    watchdog.start = now;
+    watchdog.frames = 0;
+    return;
+  }
+  if (!watchdog.start) watchdog.start = now;
+  watchdog.frames++;
+  const span = now - watchdog.start;
+  if (span < 2000) return;
+  const fps = (watchdog.frames * 1000) / span;
+  watchdog.strikes = fps < 28 ? watchdog.strikes + 1 : 0;
+  watchdog.start = now;
+  watchdog.frames = 0;
+  if (watchdog.strikes >= 3) useSafeMode(`low frame rate (${fps.toFixed(0)} fps)`);
+}
 
 let scale = 1;
 
@@ -82,25 +151,29 @@ const hud = createHud(
   game.totalRounds,
 );
 
-input.addEventListener('pointermove', (event) => game.pointer(toWorld(event)));
-input.addEventListener('pointerdown', (event) => {
-  unlock();
-  setMuted(isMuted());
-  try {
-    // Keep receiving the release even if the pointer leaves the canvas mid-charge.
-    input.setPointerCapture(event.pointerId);
-  } catch {
-    // Synthetic or already-released pointers cannot be captured; the throw still works.
-  }
-  game.pointer(toWorld(event));
-  game.press();
-});
-input.addEventListener('pointerup', (event) => {
-  game.pointer(toWorld(event));
-  game.release();
-});
-input.addEventListener('pointercancel', () => game.release());
-input.addEventListener('contextmenu', (event) => event.preventDefault());
+/** Pointer handling for one game canvas (the 2D canvas, and the 3D canvas when it is in use). */
+function bindInput(target: HTMLCanvasElement): void {
+  target.addEventListener('pointermove', (event) => game.pointer(toWorld(event)));
+  target.addEventListener('pointerdown', (event) => {
+    unlock();
+    setMuted(isMuted());
+    try {
+      // Keep receiving the release even if the pointer leaves the canvas mid-charge.
+      target.setPointerCapture(event.pointerId);
+    } catch {
+      // Synthetic or already-released pointers cannot be captured; the throw still works.
+    }
+    game.pointer(toWorld(event));
+    game.press();
+  });
+  target.addEventListener('pointerup', (event) => {
+    game.pointer(toWorld(event));
+    game.release();
+  });
+  target.addEventListener('pointercancel', () => game.release());
+  target.addEventListener('contextmenu', (event) => event.preventDefault());
+}
+bindInput(canvas);
 window.addEventListener('resize', resize);
 
 if (import.meta.env.DEV) {
@@ -126,18 +199,30 @@ window.addEventListener('keydown', () => {
   lastInput = performance.now();
 }, true);
 
-const operator = createOperatorPanel({ resetToAttract, setMuted, isMuted });
+const operator = createOperatorPanel({
+  resetToAttract,
+  setMuted,
+  isMuted,
+  graphics: () => (r3d ? '3d' : 'safe'),
+  toggleGraphics: () => (r3d ? useSafeMode('operator') : useFullGraphics()),
+});
 
 window.addEventListener('keydown', (event) => {
   if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'o') {
     event.preventDefault();
     operator.toggle();
+  } else if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === 'g') {
+    // Hidden booth key: flip between full 3D and the flat safe mode.
+    event.preventDefault();
+    if (r3d) useSafeMode('operator key');
+    else useFullGraphics();
   } else {
     hud.key(event);
   }
 });
 
 function frame(now: number): void {
+  watchFrameRate(now, now - last);
   // Clamp the step so a stalled tab does not fast-forward the round timer.
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;

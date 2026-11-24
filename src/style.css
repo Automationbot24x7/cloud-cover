@@ -719,7 +719,7 @@ i {
 .world-tag b {
   font-weight: 800;
   font-style: italic;
-  font-size: calc(var(--u) * 34);
+  font-size: calc(var(--u) * 44);
   line-height: 1;
 }
 
@@ -744,7 +744,7 @@ i {
 .tally {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--u) * 46);
+  bottom: calc(var(--u) * 8);
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -772,8 +772,8 @@ i {
 
 .tally-icons i {
   display: block;
-  width: calc(var(--u) * 26);
-  height: calc(var(--u) * 26);
+  width: calc(var(--u) * 34);
+  height: calc(var(--u) * 34);
   margin: 0;
   transform: none;
   border-radius: 50%;
@@ -795,7 +795,71 @@ i {
 .tally-label {
   font-weight: 800;
   font-style: italic;
-  font-size: calc(var(--u) * 30);
+  font-size: calc(var(--u) * 40);
   letter-spacing: 0.04em;
-  min-width: calc(var(--u) * 150);
+  min-width: calc(var(--u) * 190);
+}
+
+/* 3D mode: dark bands behind the top bar and the hint strip, so the skyline never runs under the text. */
+body.r3d #hud::before,
+body.r3d #hud::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+body.r3d #hud::before {
+  top: 0;
+  height: calc(var(--u) * 128);
+  background: linear-gradient(rgba(3, 8, 20, 0.96) 0%, rgba(3, 8, 20, 0.9) 70%, rgba(3, 8, 20, 0));
+}
+body.r3d #hud::after {
+  bottom: 0;
+  height: calc(var(--u) * 70);
+  background: linear-gradient(rgba(3, 8, 20, 0), rgba(3, 8, 20, 0.9) 40%, rgba(3, 8, 20, 0.96));
+}
+#hud > * {
+  z-index: 1;
+}
+
+/* "YOU" over the thrower in 3D. */
+.world-you {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  padding: calc(var(--u) * 2) calc(var(--u) * 10);
+  border-radius: calc(var(--u) * 6);
+  background: var(--cyan);
+  color: #04101f;
+  font-family: var(--display), sans-serif;
+  font-weight: 800;
+  font-size: calc(var(--u) * 20);
+  letter-spacing: 0.14em;
+  box-shadow: 0 0 calc(var(--u) * 14) rgba(127, 224, 255, 0.6);
+}
+
+/* A short flash over each runner a watcher catches. */
+.world-spotted {
+  position: absolute;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  padding: calc(var(--u) * 2) calc(var(--u) * 8);
+  border-radius: calc(var(--u) * 4);
+  background: var(--coral);
+  color: #fff;
+  font-family: var(--display), sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 18);
+  letter-spacing: 0.1em;
+  animation: spotted-pop 1.1s ease-out forwards;
+}
+@keyframes spotted-pop {
+  0% { opacity: 0; transform: translate(-50%, -60%) scale(0.6); }
+  15% { opacity: 1; transform: translate(-50%, -100%) scale(1.15); }
+  30% { transform: translate(-50%, -100%) scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -140%) scale(1); }
 }

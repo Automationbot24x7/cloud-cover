@@ -4,6 +4,9 @@ interface OperatorActions {
   resetToAttract(): void;
   setMuted(muted: boolean): void;
   isMuted(): boolean;
+  /** Which renderer is drawing: full 3D or the flat safe mode. */
+  graphics(): '3d' | 'safe';
+  toggleGraphics(): void;
 }
 
 /** Returns a DOM element with the given class and text. */
@@ -33,7 +36,7 @@ function dateForFilename(now: number): string {
 export function createOperatorPanel(actions: OperatorActions): { toggle(): void; isOpen(): boolean } {
   const stage = document.getElementById('stage');
   if (!stage) throw new Error('Missing element #stage');
-  const canvas = stage.querySelector('canvas');
+  const host: HTMLElement = stage;
   const backdrop = element('div', 'operator-backdrop');
   backdrop.hidden = true;
   const panel = element('section', 'operator-panel');
@@ -49,11 +52,12 @@ export function createOperatorPanel(actions: OperatorActions): { toggle(): void;
   const board = button('Open leaderboard window');
   const note = element('p', 'operator-note', 'Drag it to the second screen and press F11');
   const sound = button('');
+  const graphics = button('');
   const download = button("Download today's scores (CSV)");
   const clear = button("Clear today's board");
   clear.classList.add('operator-danger');
   stats.append(runs, best, average);
-  panel.append(title, stats, reset, board, note, sound, download, clear);
+  panel.append(title, stats, reset, board, note, sound, graphics, download, clear);
   backdrop.append(panel);
   stage.append(backdrop);
 
@@ -75,6 +79,11 @@ export function createOperatorPanel(actions: OperatorActions): { toggle(): void;
     sound.setAttribute('aria-pressed', String(!actions.isMuted()));
   }
 
+  /** Returns the graphics button to the renderer in use. */
+  function refreshGraphics(): void {
+    graphics.textContent = actions.graphics() === '3d' ? 'Graphics: 3D (switch to safe mode)' : 'Graphics: safe mode (switch to 3D)';
+  }
+
   /** Returns the clear button to its unconfirmed state. */
   function resetClear(): void {
     clearDeadline = 0;
@@ -91,6 +100,7 @@ export function createOperatorPanel(actions: OperatorActions): { toggle(): void;
 
   /** Returns captured canvas pointers to their normal cancelled state. */
   function cancelCanvasPointers(): void {
+    const canvas = [...host.querySelectorAll('canvas')].find((c) => c.style.display !== 'none');
     if (!canvas) return;
     for (const pointerId of canvasPointers) {
       canvas.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId }));
@@ -107,6 +117,10 @@ export function createOperatorPanel(actions: OperatorActions): { toggle(): void;
   sound.addEventListener('click', () => {
     actions.setMuted(!actions.isMuted());
     refreshSound();
+  });
+  graphics.addEventListener('click', () => {
+    actions.toggleGraphics();
+    refreshGraphics();
   });
   download.addEventListener('click', () => {
     const now = Date.now();
@@ -143,14 +157,14 @@ export function createOperatorPanel(actions: OperatorActions): { toggle(): void;
     }
   }, true);
   window.addEventListener('pointerdown', (event) => {
-    if (event.target === canvas) canvasPointers.add(event.pointerId);
+    if (event.target instanceof HTMLCanvasElement) canvasPointers.add(event.pointerId);
   }, true);
   for (const type of ['pointerup', 'pointercancel'] as const) {
     window.addEventListener(type, (event) => canvasPointers.delete(event.pointerId), true);
   }
   for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'] as const) {
     window.addEventListener(type, (event) => {
-      if (!backdrop.hidden && event.target === canvas) event.stopImmediatePropagation();
+      if (!backdrop.hidden && event.target instanceof HTMLCanvasElement) event.stopImmediatePropagation();
     }, true);
   }
 
@@ -163,6 +177,7 @@ export function createOperatorPanel(actions: OperatorActions): { toggle(): void;
       cancelCanvasPointers();
       refreshStats();
       refreshSound();
+      refreshGraphics();
       backdrop.hidden = false;
       reset.focus();
     },
