@@ -179,6 +179,7 @@ window.addEventListener('resize', resize);
 if (import.meta.env.DEV) {
   // Handle for automated play-tests in the dev server only. Not present in the built game.
   (window as unknown as { __game: typeof game }).__game = game;
+  (window as unknown as { __gpu: () => unknown }).__gpu = () => r3d?.stats() ?? null;
 }
 
 let last = performance.now();

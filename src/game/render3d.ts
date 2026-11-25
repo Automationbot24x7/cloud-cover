@@ -258,6 +258,8 @@ export interface Renderer3D {
   project(p: Vec, h?: number): { x: number; y: number };
   /** Release the GPU and remove the canvas and overlays (used when switching to safe mode). */
   dispose(): void;
+  /** GPU object counts, for soak tests. */
+  stats(): { geometries: number; textures: number; programs: number };
 }
 
 export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
@@ -535,11 +537,19 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const beamSpillMat = beamVolumeMat.clone();
   beamSpillMat.uniforms.strength.value = 0.11;
 
+  /** Textures made for the current level only; released when the next level is built. */
+  const levelTextures: THREE.Texture[] = [];
+
   function disposeGroup(g: THREE.Object3D): void {
     g.traverse((o) => {
       const mesh = o as THREE.Mesh;
       if (mesh.geometry) mesh.geometry.dispose();
+      const mats = mesh.material ? (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) : [];
+      // Shared materials (beams) live for the whole session; per-level ones go with the level.
+      for (const m of mats) if (m !== beamFloorMat && m !== beamSpillMat && m !== beamVolumeMat) m.dispose();
     });
+    levelTextures.forEach((t) => t.dispose());
+    levelTextures.length = 0;
   }
 
   function buildLevel(level: Level): void {
@@ -554,6 +564,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
 
     // Buildings: extruded footprints with roof texture on top and lit windows on the sides.
     const concrete = concreteTexture();
+    levelTextures.push(concrete);
     for (const poly of level.blocks) {
       const shape = new THREE.Shape(poly.map((p) => new THREE.Vector2(p.x - CX, CZ - p.y)));
       const h = heightOf(poly);
@@ -561,6 +572,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       geo.rotateX(-Math.PI / 2);
       const side = concrete.clone();
       side.needsUpdate = true;
+      levelTextures.push(side);
       side.repeat.set(1 / 120, 1 / h);
       const roofMat = new THREE.MeshStandardMaterial({
         map: roofTex,
@@ -644,6 +656,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     const heading = Math.atan2(b.y - a.y, b.x - a.x);
     const laneTex = lane.clone();
     laneTex.needsUpdate = true;
+    levelTextures.push(laneTex);
     laneTex.repeat.set(len / 60, 1);
     const laneMat = new THREE.MeshBasicMaterial({
       map: laneTex,
@@ -1501,6 +1514,13 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       return { x: hit.x + CX, y: hit.z + CZ };
     },
     project,
+    stats() {
+      return {
+        geometries: renderer.info.memory.geometries,
+        textures: renderer.info.memory.textures,
+        programs: renderer.info.programs?.length ?? 0,
+      };
+    },
     dispose() {
       tag.remove();
       you.remove();
