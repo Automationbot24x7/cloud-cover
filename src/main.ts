@@ -15,6 +15,14 @@ import { dayKey, mapOfTheDay } from './game/run';
 import { createOperatorPanel } from './game/operator';
 import { renderWorld } from './game/render';
 import { createRenderer3D, type Renderer3D } from './game/render3d';
+import {
+  initialLiveView,
+  onLiveSnapshotRequest,
+  publishLive,
+  publishLiveSnapshot,
+  reduceLive,
+  type LiveMessage,
+} from './game/live';
 import { registerServiceWorker } from './pwa';
 
 const canvas = document.getElementById('world') as HTMLCanvasElement;
@@ -130,12 +138,57 @@ const fixedMaps = (new URLSearchParams(location.search).get('maps') ?? '')
   .filter((l): l is (typeof LEVELS)[number] => !!l);
 const dailyTitle = (): string => (fixedMaps.length ? '' : mapOfTheDay(LEVELS, dayKey()).title);
 
+let lastAimPublish = Number.NEGATIVE_INFINITY;
+let lastFlightPublish = Number.NEGATIVE_INFINITY;
+let cloudPublished = false;
+let liveSnapshot = initialLiveView();
+
+/** Publishes live state without interrupting the game if browser messaging is unavailable. */
+function sendLive(message: LiveMessage): void {
+  liveSnapshot = reduceLive(liveSnapshot, message);
+  publishLive(message);
+}
+
+/** Clears the current run from the board and starts a fresh idle timeout window. */
+function sendLiveIdle(): void {
+  cloudPublished = false;
+  lastAimPublish = Number.NEGATIVE_INFINITY;
+  lastFlightPublish = Number.NEGATIVE_INFINITY;
+  sendLive({ type: 'idle' });
+}
+
 const game = createGame({
-  onRound: (index, level) => hud.showRound(index, level, game.totalRounds),
+  onRound: (index, level) => {
+    cloudPublished = false;
+    sendLive({ type: 'round', index, total: game.totalRounds, levelId: level.id });
+    hud.showRound(index, level, game.totalRounds);
+  },
   onAim: () => hud.showAim(),
-  onThrow: () => hud.showThrow(),
-  onResult: (result) => hud.showResult(result, game.state.roundIndex),
-  onSummary: (results, score) => hud.showSummary(results, score),
+  onThrow: () => {
+    sendLive({ type: 'flight', marker: { ...game.state.canister } });
+    lastFlightPublish = Number.NEGATIVE_INFINITY;
+    hud.showThrow();
+  },
+  onResult: (result) => {
+    sendLive({
+      type: 'result',
+      ratio: result.ratio,
+      grade: result.grade,
+      saved: result.saved,
+      points: result.points,
+      score: game.state.score,
+    });
+    hud.showResult(result, game.state.roundIndex);
+  },
+  onSummary: (results, score) => {
+    sendLive({
+      type: 'summary',
+      score,
+      saved: results.reduce((total, result) => total + result.saved, 0),
+      squad: game.totalRounds * 5,
+    });
+    hud.showSummary(results, score);
+  },
 }, { maps: fixedMaps });
 
 const hud = createHud(
@@ -146,7 +199,10 @@ const hud = createHud(
       hud.hideAttract();
       game.start();
     },
-    reset: () => game.reset(),
+    reset: () => {
+      game.reset();
+      sendLiveIdle();
+    },
   },
   game.totalRounds,
 );
@@ -188,6 +244,7 @@ let lastInput = last;
 /** Return the game and HUD to the attract screen. */
 function resetToAttract(): void {
   game.reset();
+  sendLiveIdle();
   hud.showAttract(dailyTitle());
 }
 
@@ -236,10 +293,28 @@ function frame(now: number): void {
   if (!frozen) game.update(dt);
   if (!frozen && hud.tick(dt)) {
     game.reset();
+    sendLiveIdle();
     hud.showAttract(dailyTitle());
   }
   hud.frame(game.state);
   const st = game.state;
+  if (!frozen && st.phase === 'aim' && now - lastAimPublish >= 100) {
+    sendLive({
+      type: 'aim',
+      marker: { ...st.marker },
+      charging: st.charging,
+      ratio: st.charging ? st.live?.ratio ?? null : null,
+    });
+    lastAimPublish = now;
+  }
+  if (!frozen && st.phase === 'flight' && now - lastFlightPublish >= 100) {
+    sendLive({ type: 'flight', marker: { ...st.canister } });
+    lastFlightPublish = now;
+  }
+  if (!frozen && st.cloud && !cloudPublished) {
+    sendLive({ type: 'cloud', center: { ...st.cloud.center }, radius: st.cloud.radius });
+    cloudPublished = true;
+  }
   updateMusic(st.phase, st.phase === 'aim' && st.charging ? Math.min(1, st.charge / Math.max(1, st.preview.length)) : 0);
 
   if (r3d) {
@@ -253,5 +328,7 @@ function frame(now: number): void {
 
 resize();
 hud.showAttract(dailyTitle());
+onLiveSnapshotRequest(() => publishLiveSnapshot(liveSnapshot));
+sendLiveIdle();
 registerServiceWorker();
 requestAnimationFrame(frame);

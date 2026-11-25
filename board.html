@@ -10,12 +10,48 @@
   </head>
   <body class="board-page">
     <main class="board-screen">
-      <header>
-        <div class="kicker">LIVE <i></i> TODAY</div>
-        <h1>CLOUD COVER <span>LEADERBOARD</span></h1>
-      </header>
-      <ol class="board-list big" id="board"></ol>
-      <footer id="board-foot">Waiting for the first run</footer>
+      <section class="live-panel" aria-labelledby="now-title">
+        <header class="live-header">
+          <div>
+            <div class="kicker">LIVE <i></i> TODAY</div>
+            <h1 id="now-title">NOW PLAYING</h1>
+          </div>
+          <div class="total-score"><span>TOTAL SCORE</span><strong id="live-total">0</strong></div>
+        </header>
+        <div class="live-meta">
+          <strong id="live-round">WAITING FOR THE NEXT RUN</strong>
+          <span id="live-map"></span>
+          <span id="live-status">NEXT UP</span>
+        </div>
+        <div class="live-map-wrap">
+          <canvas id="live-canvas" width="1600" height="900" aria-label="Live map view"></canvas>
+          <div class="attract-card" id="attract-card" hidden>
+            <strong>NEXT UP: YOU</strong>
+            <span>MAP OF THE DAY</span>
+            <h2 id="daily-map"></h2>
+          </div>
+        </div>
+        <div class="live-footer">
+          <div class="live-hidden" id="live-hidden" hidden>
+            <strong id="live-percent">0%</strong>
+            <span>HIDDEN</span>
+          </div>
+          <div class="live-result" id="live-result" hidden>
+            <strong id="result-grade"></strong>
+            <span id="result-safe"></span>
+            <span id="result-points"></span>
+          </div>
+          <div class="live-summary" id="live-summary" hidden></div>
+        </div>
+      </section>
+      <aside class="score-panel" aria-labelledby="best-title">
+        <header>
+          <div class="kicker">TODAY</div>
+          <h2 id="best-title">TODAY'S BEST</h2>
+        </header>
+        <ol class="board-list big" id="board"></ol>
+        <footer id="board-foot">Waiting for the first run</footer>
+      </aside>
     </main>
     <script type="module" src="/src/board.ts"></script>
   </body>
