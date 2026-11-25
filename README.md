@@ -50,7 +50,7 @@ Fans in a booth line have a minute or two, no tutorial and one hand on a mouse. 
   8. the live spectator screen, run as an agent session in **JetBrains Air** inside WebStorm (record and screenshot in `docs/jetbrains/air-session-008.md`).
 - **WebStorm's code inspector**, run headless over `src/`, found 22 real issues (duplicated code, dead code, invalid CSS, grammar); after the fixes a second run found 3, which were then fixed. Results: `docs/inspections/`.
 
-A longer write-up of the JetBrains workflow is in `AI_SHOWCASE.md` (coming).
+A longer write-up of the JetBrains workflow is in [`AI_SHOWCASE.md`](AI_SHOWCASE.md).
 
 ## Run it locally
 
