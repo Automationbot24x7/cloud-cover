@@ -211,6 +211,7 @@
   font-size: calc(var(--u) * 22);
   font-weight: 700;
   letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
 .score-panel {
