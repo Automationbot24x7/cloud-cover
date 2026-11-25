@@ -164,6 +164,7 @@ const game = createGame({
     hud.showRound(index, level, game.totalRounds);
   },
   onAim: () => hud.showAim(),
+  onTimeUp: () => hud.showTimeUp(),
   onThrow: () => {
     sendLive({ type: 'flight', marker: { ...game.state.canister } });
     lastFlightPublish = Number.NEGATIVE_INFINITY;

@@ -863,3 +863,25 @@ body.r3d #hud::after {
   80% { opacity: 1; }
   100% { opacity: 0; transform: translate(-50%, -140%) scale(1); }
 }
+
+/* Round timer ran out. */
+.timeup {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  font-family: var(--display), sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 96);
+  color: var(--coral);
+  text-shadow: 0 0 calc(var(--u) * 24) rgba(255, 90, 106, 0.6);
+  pointer-events: none;
+  animation: timeup-pop 1.2s ease-out forwards;
+}
+@keyframes timeup-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}

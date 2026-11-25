@@ -78,6 +78,8 @@ function showAttract(): void {
   liveMap.textContent = '';
   liveStatus.textContent = 'NEXT UP';
   liveTotal.textContent = '0';
+  // No score panel while nobody is playing: "TOTAL SCORE 0" beside "WAITING" reads as broken.
+  (liveTotal.parentElement as HTMLElement).hidden = true;
   liveHidden.hidden = true;
   liveResult.hidden = true;
   liveSummary.hidden = true;
@@ -129,6 +131,7 @@ function paintLive(): void {
   liveStatus.textContent = view.status === 'aiming' ? 'AIMING' : view.status === 'flying' ? 'IN FLIGHT' :
     view.status === 'result' ? 'ROUND RESULT' : 'RUN COMPLETE';
   liveTotal.textContent = view.totalScore.toLocaleString('en-US');
+  (liveTotal.parentElement as HTMLElement).hidden = false;
 
   const showPercent = view.status === 'aiming' && view.charging && view.ratio !== null;
   liveHidden.hidden = !showPercent;

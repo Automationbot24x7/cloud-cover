@@ -18,6 +18,8 @@ export interface GameHooks {
   onRound?(index: number, level: Level): void;
   /** Aiming has started. */
   onAim?(): void;
+  /** The round timer ran out (an automatic throw follows). */
+  onTimeUp?(): void;
   /** The canister has left the hand. */
   onThrow?(): void;
   /** The round has been scored. */
@@ -394,6 +396,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
         if (state.timeLeft <= 0) {
           state.timeLeft = 0;
           // Out of time: throw with whatever power is built, or a short lob if the button was never held.
+          hooks.onTimeUp?.();
           fire(state.charging ? state.charge : Math.min(state.preview.length, 420));
         }
         break;

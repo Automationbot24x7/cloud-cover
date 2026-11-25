@@ -15,7 +15,7 @@ const GRADE_COLOR: Record<Grade, string> = {
 
 const TAG_LENGTH = 3;
 /** Seconds the name-entry screen waits before giving the booth back to the next fan. */
-const ENTRY_IDLE = 30;
+const ENTRY_IDLE = 45;
 /** Seconds the saved-score screen stays up. */
 const SAVED_IDLE = 12;
 
@@ -37,6 +37,8 @@ export function rankFor(saved: number, squad: number): string {
 export interface Hud {
   /** Per-frame refresh of the numbers that animate. */
   frame(state: GameState): void;
+  /** Flash "TIME'S UP" when the round timer runs out. */
+  showTimeUp(): void;
   /** Show the title screen. `dailyTitle` names today's final map. */
   showAttract(dailyTitle?: string): void;
   hideAttract(): void;
@@ -74,6 +76,8 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
   const keys = el<HTMLDivElement>('entry-keys');
   const saveButton = el<HTMLButtonElement>('save');
   const idleFill = el<HTMLDivElement>('idle-fill');
+  const entryIdleFill = el<HTMLDivElement>('entry-idle-fill');
+  const timeUp = el<HTMLDivElement>('timeup');
 
   let tag = '';
   let finalScore = 0;
@@ -211,6 +215,10 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       hint.style.opacity = '0';
     },
 
+    showTimeUp() {
+      restartAnimation(timeUp);
+    },
+
     showAim() {
       banner.hidden = true;
       hint.style.opacity = '1';
@@ -274,7 +282,10 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
     tick(dt) {
       if (summary.hidden) return false;
       idle += dt;
-      idleFill.style.transform = `scaleX(${Math.max(0, 1 - idle / idleLimit)})`;
+      // Both name entry and the saved screen show how long until the booth resets for the next fan.
+      const left = `scaleX(${Math.max(0, 1 - idle / idleLimit)})`;
+      idleFill.style.transform = left;
+      entryIdleFill.style.transform = left;
       if (idle >= idleLimit || wantsReset) {
         wantsReset = false;
         return true;
