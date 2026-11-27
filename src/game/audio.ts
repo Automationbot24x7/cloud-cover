@@ -11,6 +11,13 @@ let master: GainNode | null = null;
 let sfxBus: GainNode | null = null;
 let music: Music | null = null;
 let muted = false;
+/** While true, effects are silent (the title-screen demo plays without sound). */
+let quiet = false;
+
+/** Silence sound effects (not music) while the attract demo runs. */
+export function setQuiet(value: boolean): void {
+  quiet = value;
+}
 
 /** Create or resume the audio context. Call from a user gesture. */
 export function unlock(): void {
@@ -61,7 +68,7 @@ export function updateMusic(phase: string, tension: number): void {
 }
 
 function play(fn: (c: BaseAudioContext, d: AudioNode, t: number) => void): void {
-  if (!ctx || !sfxBus) return;
+  if (!ctx || !sfxBus || quiet) return;
   fn(ctx, sfxBus, ctx.currentTime + 0.005);
 }
 
@@ -70,7 +77,7 @@ export const chargeTone = (() => {
   let voice: ReturnType<typeof chargeVoice> | null = null;
   return {
     start(): void {
-      if (!ctx || !sfxBus || voice) return;
+      if (!ctx || !sfxBus || voice || quiet) return;
       voice = chargeVoice(ctx, sfxBus, ctx.currentTime);
     },
     /** `level` is the power from 0 to 1. */

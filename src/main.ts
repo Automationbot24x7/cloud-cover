@@ -7,7 +7,7 @@ import './style.css';
 import './operator.css';
 
 import type { Vec } from './core/types';
-import { isMuted, setMuted, unlock, updateMusic } from './game/audio';
+import { isMuted, setMuted, setQuiet, unlock, updateMusic } from './game/audio';
 import { createGame } from './game/game';
 import { createHud } from './game/hud';
 import { LEVELS, WORLD } from './game/levels';
@@ -157,6 +157,9 @@ function sendLiveIdle(): void {
   sendLive({ type: 'idle' });
 }
 
+/** Last pointer position on screen, for the HOLD ring after a quick tap. */
+const lastPointer = { x: 0, y: 0 };
+
 const game = createGame({
   onRound: (index, level) => {
     cloudPublished = false;
@@ -164,6 +167,10 @@ const game = createGame({
     hud.showRound(index, level, game.totalRounds);
   },
   onAim: () => hud.showAim(),
+  onTap: () => {
+    const box = (document.getElementById('stage') as HTMLElement).getBoundingClientRect();
+    hud.showHold(lastPointer.x - box.left, lastPointer.y - box.top);
+  },
   onTimeUp: () => hud.showTimeUp(),
   onThrow: () => {
     sendLive({ type: 'flight', marker: { ...game.state.canister } });
@@ -210,8 +217,14 @@ const hud = createHud(
 
 /** Pointer handling for one game canvas (the 2D canvas, and the 3D canvas when it is in use). */
 function bindInput(target: HTMLCanvasElement): void {
-  target.addEventListener('pointermove', (event) => game.pointer(toWorld(event)));
+  target.addEventListener('pointermove', (event) => {
+    lastPointer.x = event.clientX;
+    lastPointer.y = event.clientY;
+    game.pointer(toWorld(event));
+  });
   target.addEventListener('pointerdown', (event) => {
+    lastPointer.x = event.clientX;
+    lastPointer.y = event.clientY;
     unlock();
     setMuted(isMuted());
     try {
@@ -237,6 +250,7 @@ if (import.meta.env.DEV) {
   // Handle for automated play-tests in the dev server only. Not present in the built game.
   (window as unknown as { __game: typeof game }).__game = game;
   (window as unknown as { __gpu: () => unknown }).__gpu = () => r3d?.stats() ?? null;
+  (window as unknown as { __demo: () => unknown }).__demo = () => ({ on: demoOn, phase: demo.state.phase, t: demo.state.phaseTime });
 }
 
 let last = performance.now();
@@ -280,6 +294,62 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
+// ---------- Title-screen demo ----------
+// Between players the title steps aside every few seconds and the game plays one perfect throw by itself,
+// silently, on the first map. The queue learns aim, hold, release by watching. It runs on its own game
+// instance, so the real run, the scores and the spectator feed never see it.
+const DEMO_LEVEL = LEVELS.find((l) => l.id === 'open-gap') ?? LEVELS[0];
+const TITLE_SECONDS = 8;
+const demo = createGame({}, { maps: [DEMO_LEVEL] });
+const attractEl = document.getElementById('attract') as HTMLElement;
+let attractClock = 0;
+let demoOn = false;
+
+function startDemo(): void {
+  demoOn = true;
+  attractEl.classList.add('demo');
+  setQuiet(true);
+  demo.reset();
+  demo.start();
+  setQuiet(false);
+}
+
+function stopDemo(): void {
+  demoOn = false;
+  attractClock = 0;
+  attractEl.classList.remove('demo');
+}
+
+function stepDemo(dt: number): void {
+  const s = demo.state;
+  setQuiet(true);
+  if (s.phase === 'aim') {
+    // Smoke straight onto the middle of the crossing: the clearest picture of the idea.
+    const t = s.level.thrower;
+    const { a, b } = s.level.crossing;
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    demo.pointer(mid);
+    const power = Math.hypot(mid.x - t.x, mid.y - t.y);
+    if (!s.charging && s.phaseTime > 0.6) demo.press();
+    else if (s.charging && s.charge >= power - 8) demo.release();
+  }
+  demo.update(dt);
+  setQuiet(false);
+  if (s.phase === 'summary' || (s.phase === 'result' && s.phaseTime > 1.3)) stopDemo();
+}
+
+/** Run the title/demo cycle while nobody is playing. */
+function updateAttract(dt: number): void {
+  if (game.state.phase !== 'attract' || operator.isOpen()) {
+    if (demoOn) stopDemo();
+    attractClock = 0;
+    return;
+  }
+  attractClock += dt;
+  if (!demoOn && attractClock >= TITLE_SECONDS) startDemo();
+  if (demoOn) stepDemo(dt);
+}
+
 function frame(now: number): void {
   watchFrameRate(now, now - last);
   // Clamp the step so a stalled tab does not fast-forward the round timer.
@@ -292,6 +362,7 @@ function frame(now: number): void {
   // Dev-only test hook: automated screenshots freeze time and step the game themselves.
   const frozen = import.meta.env.DEV && (window as unknown as { __freeze?: boolean }).__freeze === true;
   if (!frozen) game.update(dt);
+  if (!frozen) updateAttract(dt);
   if (!frozen && hud.tick(dt)) {
     game.reset();
     sendLiveIdle();
@@ -319,10 +390,10 @@ function frame(now: number): void {
   updateMusic(st.phase, st.phase === 'aim' && st.charging ? Math.min(1, st.charge / Math.max(1, st.preview.length)) : 0);
 
   if (r3d) {
-    r3d.render(game.state);
+    r3d.render(demoOn ? demo.state : game.state);
   } else {
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    renderWorld(ctx, game.state);
+    renderWorld(ctx, demoOn ? demo.state : game.state);
   }
   requestAnimationFrame(frame);
 }

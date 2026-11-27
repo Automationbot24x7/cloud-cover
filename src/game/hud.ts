@@ -37,6 +37,8 @@ export function rankFor(saved: number, squad: number): string {
 export interface Hud {
   /** Per-frame refresh of the numbers that animate. */
   frame(state: GameState): void;
+  /** Pulse a "HOLD" ring at this stage position (CSS pixels) after a quick tap. */
+  showHold(x: number, y: number): void;
   /** Flash "TIME'S UP" when the round timer runs out. */
   showTimeUp(): void;
   /** Show the title screen. `dailyTitle` names today's final map. */
@@ -213,6 +215,13 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       roundTitle.textContent = level.title;
       pips.querySelectorAll('.pip').forEach((p, i) => p.classList.toggle('now', i === index));
       hint.style.opacity = '0';
+    },
+
+    showHold(x, y) {
+      const hold = el<HTMLDivElement>('hold-hint');
+      hold.style.left = `${x}px`;
+      hold.style.top = `${y}px`;
+      restartAnimation(hold);
     },
 
     showTimeUp() {

@@ -885,3 +885,83 @@ body.r3d #hud::after {
   75% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* A quick tap does not throw: a ring pulses at the pointer to say "hold". */
+.hold-hint {
+  position: absolute;
+  width: calc(var(--u) * 110);
+  height: calc(var(--u) * 110);
+  margin: calc(var(--u) * -55) 0 0 calc(var(--u) * -55);
+  border-radius: 50%;
+  border: calc(var(--u) * 5) solid var(--cyan);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: hold-pulse 1.4s ease-out forwards;
+}
+.hold-hint span {
+  margin-top: calc(var(--u) * 150);
+  padding: calc(var(--u) * 3) calc(var(--u) * 12);
+  border-radius: calc(var(--u) * 6);
+  background: var(--cyan);
+  color: #04101f;
+  font-family: var(--display), sans-serif;
+  font-weight: 800;
+  font-size: calc(var(--u) * 24);
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+@keyframes hold-pulse {
+  0% { opacity: 0; transform: scale(0.4); }
+  15% { opacity: 1; transform: scale(1); }
+  35% { transform: scale(0.85); }
+  55% { transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.1); }
+}
+
+/* Title-screen demo: the title steps aside while the game plays one throw by itself. */
+.attract-demo {
+  display: none;
+}
+#attract.demo {
+  background: linear-gradient(rgba(4, 12, 28, 0) 70%, rgba(4, 12, 28, 0.85));
+  animation: none;
+}
+#attract.demo .attract-main,
+#attract.demo .attract-board {
+  visibility: hidden;
+}
+#attract.demo .attract-demo {
+  display: flex;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--u) * 56);
+  justify-content: center;
+  align-items: center;
+  gap: calc(var(--u) * 22);
+}
+.attract-demo-tag {
+  padding: calc(var(--u) * 4) calc(var(--u) * 14);
+  border: calc(var(--u) * 2) solid var(--muted);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: calc(var(--u) * 22);
+  letter-spacing: 0.3em;
+}
+.attract-demo-cta {
+  padding: calc(var(--u) * 12) calc(var(--u) * 34);
+  background: var(--cyan);
+  color: #04101f;
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 40);
+  letter-spacing: 0.06em;
+  transform: skewX(-12deg);
+  animation: demo-cta 1.2s ease-in-out infinite alternate;
+}
+@keyframes demo-cta {
+  from { box-shadow: 0 0 0 rgba(127, 224, 255, 0); }
+  to { box-shadow: 0 0 calc(var(--u) * 34) rgba(127, 224, 255, 0.75); }
+}

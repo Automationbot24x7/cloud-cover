@@ -7,6 +7,9 @@ import { buildRun, dayKey, hashString, RUN_TIERS, seededRandom } from './run';
 import { COLOR } from './render';
 import { CHARGE_SPEED, SQUAD_SIZE, TIMING, type GameState, type Grade, type Puff, type RoundResult, type Runner } from './state';
 
+/** Shorter presses than this are taps, not throws. */
+export const TAP_SECONDS = 0.25;
+
 /** How many points along the crossing each watcher is tested against. */
 const SAMPLES = 24;
 /** Keep the test points off the cover walls at each end of the crossing. */
@@ -20,6 +23,8 @@ export interface GameHooks {
   onAim?(): void;
   /** The round timer ran out (an automatic throw follows). */
   onTimeUp?(): void;
+  /** The button was let go too quickly to count as a throw (the player tapped instead of holding). */
+  onTap?(): void;
   /** The canister has left the hand. */
   onThrow?(): void;
   /** The round has been scored. */
@@ -182,6 +187,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
 
   let timeAtThrow = 0;
   let lastTick = 0;
+  let pressedAt = 0;
   let pending: RoundResult | null = null;
   /** Sound cues already played this round, so each fires once. */
   let goPlayed = false;
@@ -320,6 +326,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
   function press(): void {
     if (state.phase !== 'aim' || state.charging) return;
     state.charging = true;
+    pressedAt = state.clock;
     state.charge = THROW.minRange;
     state.chargeDir = 1;
     chargeTone.start();
@@ -328,6 +335,17 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
 
   function release(): void {
     if (state.phase !== 'aim' || !state.charging) return;
+    // A quick tap is a first-timer who has not found "hold" yet: keep the canister and show them.
+    if (state.clock - pressedAt < TAP_SECONDS) {
+      state.charging = false;
+      state.charge = THROW.minRange;
+      state.chargeDir = 1;
+      state.live = null;
+      chargeTone.stop();
+      refreshPreview();
+      hooks.onTap?.();
+      return;
+    }
     fire(state.charge);
   }
 
