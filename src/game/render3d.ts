@@ -1143,11 +1143,11 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       bounceDots.forEach((d) => (d.visible = false));
       return;
     }
-    // Pro round: first leg only. Full assist: at most three legs, so a long zig-zag does not cover the map.
-    const route = state.pro ? [path[0], path[1]] : full || path.length <= 2 ? path.slice(0, 4) : [path[0], path[1]];
+    // Full assist: at most three legs, so a long zig-zag does not cover the map. Otherwise the first leg and a stub.
+    const route = full || path.length <= 2 ? path.slice(0, 4) : [path[0], path[1]];
     setLine(routeLine, route, 3);
     (routeLine.material as LineMaterial).opacity = state.charging ? 0.35 : 0.85;
-    if (!full && !state.pro && path.length > 2) {
+    if (!full && path.length > 2) {
       const p1 = path[1];
       const p2 = path[2];
       const l = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
@@ -1156,7 +1156,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     } else {
       stubLine.visible = false;
     }
-    const shown = state.pro ? 0 : full ? Math.min(3, path.length - 1) : Math.min(2, path.length - 1);
+    const shown = full ? Math.min(3, path.length - 1) : Math.min(2, path.length - 1);
     bounceDots.forEach((d, i) => {
       const p = path[i + 1];
       d.visible = !!p && i + 1 < shown;
@@ -1478,8 +1478,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       beacons.forEach((b, i) => (b.visible = Math.sin(state.clock * 3 + i * 1.9) > 0.2));
       drones.forEach((d, i) => {
         const base = d.userData.base as THREE.Vector3;
-        d.position.set(base.x + Math.sin(state.clock * 0.25 + i * 2) * 60, base.y + Math.sin(state.clock * 1.4 + i) * 8, base.z);
-        d.rotation.y = Math.sin(state.clock * 0.3 + i) * 0.5;
+        // Slow and small: the throw, the beams and the smoke own the screen.
+        d.position.set(base.x + Math.sin(state.clock * 0.12 + i * 2) * 22, base.y + Math.sin(state.clock * 0.8 + i) * 4, base.z);
+        d.rotation.y = Math.sin(state.clock * 0.15 + i) * 0.3;
       });
       updateWatchers(state);
       updateAim(state);

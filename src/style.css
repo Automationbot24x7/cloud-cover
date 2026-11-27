@@ -982,7 +982,7 @@ body.r3d #hud::after {
 .power {
   position: absolute;
   left: 50%;
-  bottom: calc(var(--u) * 52);
+  bottom: calc(var(--u) * 8);
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -992,6 +992,7 @@ body.r3d #hud::after {
   font-family: var(--display), sans-serif;
 }
 .power-label {
+  white-space: nowrap;
   font-weight: 800;
   font-style: italic;
   font-size: calc(var(--u) * 26);

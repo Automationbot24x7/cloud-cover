@@ -507,10 +507,7 @@ function drawAimGuide(ctx: CanvasRenderingContext2D, state: GameState): void {
 
   // The planned route. With full assist the whole bank is drawn; otherwise only the
   // first leg and a short stub of the rebound, and the rest is the player's read.
-  if (state.pro) {
-    // Pro round: only the first leg, up to the first wall.
-    dottedPath(ctx, [path[0], path[1]], state.clock, COLOR.white, state.charging ? 0.35 : 0.7);
-  } else if (full || path.length <= 2) {
+  if (full || path.length <= 2) {
     // At most three legs: a long zig-zag preview would cover the whole map.
     dottedPath(ctx, path.slice(0, 4), state.clock, COLOR.white, state.charging ? 0.35 : 0.7);
   } else {
@@ -536,7 +533,7 @@ function drawAimGuide(ctx: CanvasRenderingContext2D, state: GameState): void {
   }
 
   // Bounce markers on the visible part of the route.
-  const lastMarker = state.pro ? 0 : full ? Math.min(3, path.length - 1) : Math.min(2, path.length - 1);
+  const lastMarker = full ? Math.min(3, path.length - 1) : Math.min(2, path.length - 1);
   for (let i = 1; i < lastMarker; i++) {
     const p = path[i];
     ctx.fillStyle = COLOR.amber;

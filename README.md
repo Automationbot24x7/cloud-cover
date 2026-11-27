@@ -17,7 +17,7 @@ Fans in a booth line have a minute or two, no tutorial and one hand on a mouse. 
 - **Instant cause and effect.** While you charge, the watchers' red view of the crossing shrinks live and a "% hidden" readout tells you how good the throw is before you let go.
 - **A short, readable story per throw.** The cloud blooms, "GO!", and your five-person squad runs. Anyone a watcher can still see is caught in a red line and flagged SPOTTED, and the tally shows how many made it.
 - **Six rounds, about 90 seconds**, rising from a straight drop to bank shots off slanted walls with only the first bounce shown.
-- **Zig-zag trick shots and a PRO round.** The canister can bank up to five times, and each bank on a good cover scores extra. The last map of the run is the PRO round: no landing ring, just the first leg of the aim line and a power bar, worth 1.5x.
+- **Zig-zag trick shots and a PRO round.** The canister can bank up to five times, and each bank on a good cover scores extra. The last map of the run is the PRO round: the same aim line but no landing ring, a power bar instead, worth 1.5x.
 - **The same six maps for everyone each day**, drawn by difficulty from a pool of 18 and ending on the **Map of the Day**, so the leaderboard is a fair contest and regulars come back tomorrow.
 - **A sunlit sky-deck in 3D**: a floating proving ground above the clouds with a glass edge you bank off, and camera pylons whose orange laser sheets are built from the same ray casts the rules use, so what looks lit is exactly what a watcher can see. Original synthesised sound and adaptive music.
 

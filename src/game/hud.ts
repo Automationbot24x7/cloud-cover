@@ -88,6 +88,7 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
   let idle = 0;
   let idleLimit = 0;
   let wantsReset = false;
+  let proNow = false;
 
   for (let i = 0; i < totalRounds; i++) {
     const pip = document.createElement('div');
@@ -219,11 +220,12 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
     showRound(index, level, total) {
       toast.hidden = true;
       const pro = isProRound(index, total);
+      proNow = pro;
       el('banner-kicker').textContent = pro ? 'PRO ROUND: MAP OF THE DAY' : index === total - 1 ? 'FINAL ROUND' : `ROUND ${index + 1} OF ${total}`;
       el('banner-title').textContent = level.title;
-      el('banner-brief').textContent = pro ? 'No landing ring. Read the bank, watch the power bar. Worth 1.5x.' : level.brief;
+      el('banner-brief').textContent = pro ? 'Same aim line, no landing ring. Watch the power bar. Worth 1.5x.' : level.brief;
       hint.innerHTML = pro
-        ? 'PRO ROUND <i></i> POWER BAR ONLY <i></i> 1.5X POINTS'
+        ? 'PRO ROUND <i></i> NO LANDING RING <i></i> 1.5X POINTS'
         : 'AIM <i></i> HOLD TO POWER UP <i></i> RELEASE TO THROW';
       restartAnimation(banner);
       roundTitle.textContent = level.title;
@@ -244,7 +246,8 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
 
     showAim() {
       banner.hidden = true;
-      hint.style.opacity = '1';
+      // In the pro round the power bar takes the hint strip's place.
+      hint.style.opacity = proNow ? '0' : '1';
     },
 
     showThrow() {
