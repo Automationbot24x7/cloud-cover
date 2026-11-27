@@ -7,7 +7,7 @@ import './style.css';
 import './board.css';
 
 import { LEVELS } from './game/levels';
-import { dayKey, mapOfTheDay, parFor, todaysRun } from './game/run';
+import { dayKey, isProRound, mapOfTheDay, parFor, todaysRun } from './game/run';
 import { renderBoardRows } from './game/boardRows';
 import { loadToday, onScoresChanged } from './game/store';
 import {
@@ -85,6 +85,7 @@ function calloutFor(message: LiveMessage, next: LiveView): void {
     else if (message.score >= par) flashCallout('BEAT PAR', 'mint');
     return;
   }
+  if (message.type === 'round' && isProRound(message.index, message.total)) flashCallout('PRO ROUND', 'cyan');
   if (message.type !== 'result') return;
   const done = (next.roundIndex ?? 0) + 1;
   const total = Math.max(1, next.roundTotal);

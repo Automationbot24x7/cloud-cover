@@ -376,7 +376,8 @@ function frame(now: number): void {
     sendLive({
       type: 'aim',
       marker: { ...st.marker },
-      charging: st.charging,
+      // The pro round hides the landing spot from the board too, so the player cannot read it off the second screen.
+      charging: st.charging && !st.pro,
       ratio: st.charging ? st.live?.ratio ?? null : null,
     });
     lastAimPublish = now;

@@ -8,7 +8,7 @@ export const WORLD = { w: 1600, h: 900 } as const;
 export const ARENA = { x: 50, y: 110, w: 1500, h: 740 } as const;
 
 /** Throw tuning for the game: a longer reach than the core default so full-field banks are possible. */
-export const THROW: ThrowOptions = { ...DEFAULT_THROW, maxRange: 1900 };
+export const THROW: ThrowOptions = { ...DEFAULT_THROW, maxRange: 2800, maxBounces: 5 };
 
 export type Assist = 'full' | 'first';
 

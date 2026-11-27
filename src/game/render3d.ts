@@ -1053,7 +1053,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const grow = clamp01(easeOutBack(age / TIMING.bloom));
       return [{ center: state.cloud.center, radius: state.cloud.radius * grow }];
     }
-    if (state.phase === 'aim' && state.charging) return [{ center: state.marker, radius: state.level.cloudRadius }];
+    if (state.phase === 'aim' && state.charging && !state.pro) return [{ center: state.marker, radius: state.level.cloudRadius }];
     return [];
   }
 
@@ -1134,7 +1134,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       }
     }
     const path = state.preview.path;
-    const full = state.level.assist === 'full';
+    const full = state.level.assist === 'full' && !state.pro;
     if (!aiming) {
       routeLine.visible = chargeLine.visible = stubLine.visible = false;
       ring.visible = ringFill.visible = false;
@@ -1143,10 +1143,11 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       bounceDots.forEach((d) => (d.visible = false));
       return;
     }
-    const route = full || path.length <= 2 ? path : [path[0], path[1]];
+    // Pro round: first leg only. Full assist: at most three legs, so a long zig-zag does not cover the map.
+    const route = state.pro ? [path[0], path[1]] : full || path.length <= 2 ? path.slice(0, 4) : [path[0], path[1]];
     setLine(routeLine, route, 3);
     (routeLine.material as LineMaterial).opacity = state.charging ? 0.35 : 0.85;
-    if (!full && path.length > 2) {
+    if (!full && !state.pro && path.length > 2) {
       const p1 = path[1];
       const p2 = path[2];
       const l = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
@@ -1155,7 +1156,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     } else {
       stubLine.visible = false;
     }
-    const shown = full ? path.length - 1 : Math.min(2, path.length - 1);
+    const shown = state.pro ? 0 : full ? Math.min(3, path.length - 1) : Math.min(2, path.length - 1);
     bounceDots.forEach((d, i) => {
       const p = path[i + 1];
       d.visible = !!p && i + 1 < shown;
@@ -1177,9 +1178,10 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
         live.push(q);
         left -= l;
       }
-      setLine(chargeLine, live, 4);
+      if (state.pro) chargeLine.visible = false;
+      else setLine(chargeLine, live, 4);
       const r = state.level.cloudRadius;
-      ring.visible = ringFill.visible = true;
+      ring.visible = ringFill.visible = !state.pro;
       ring.scale.set(r, r, 1);
       ringFill.scale.set(r, r, 1);
       ring.position.copy(at(state.marker, 2));

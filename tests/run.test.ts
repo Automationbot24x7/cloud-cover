@@ -35,14 +35,15 @@ describe('run builder', () => {
 });
 
 describe('par', () => {
-  it('is the sharp-run score: 900 per map plus bank bonuses from tier 3', async () => {
+  it('is the sharp-run score: 900 per map plus bank bonuses from tier 3, pro round x1.5', async () => {
     const { parFor } = await import('../src/game/run');
     const { LEVELS } = await import('../src/game/levels');
     // Every tier has at least three maps (map pool test), so find always succeeds here.
     const byTier = (t: number) => LEVELS.find((l) => l.tier === t)!;
     // Tiers 1, 2, 3, 3, 4, 5: six maps at 900, banks 0+0+75+75+75+150.
     const run = [byTier(1), byTier(2), byTier(3), byTier(3), byTier(4), byTier(5)];
-    expect(parFor(run)).toBe(6 * 900 + 375);
+    // The last map is the pro round: (900 + 150) x 1.5.
+    expect(parFor(run)).toBe(5 * 900 + 225 + 1575);
   });
 
   it("today's run is the same six maps every time for a date", async () => {
@@ -52,5 +53,15 @@ describe('par', () => {
     const b = todaysRun(LEVELS, '2027-01-05').map((l) => l.id);
     expect(a).toEqual(b);
     expect(a).toHaveLength(6);
+  });
+});
+
+describe('pro round', () => {
+  it('is the last round of a full run only', async () => {
+    const { isProRound } = await import('../src/game/run');
+    expect(isProRound(5, 6)).toBe(true);
+    expect(isProRound(4, 6)).toBe(false);
+    expect(isProRound(0, 1)).toBe(false);
+    expect(isProRound(1, 2)).toBe(false);
   });
 });

@@ -1,7 +1,8 @@
 import { sfx } from './audio';
 import { renderBoardRows } from './boardRows';
 import { GRADE_LABEL } from './game';
-import type { Level } from './levels';
+import { THROW, type Level } from './levels';
+import { isProRound } from './run';
 import { squadPoses } from './squad';
 import { SQUAD_SIZE, TIMING, type GameState, type Grade, type RoundResult } from './state';
 import { loadToday, saveScore } from './store';
@@ -185,6 +186,14 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
         el('tally-label').textContent = done < poses.length ? 'SQUAD MOVING' : `${safe}/${poses.length} SAFE`;
         tally.dataset.result = done < poses.length ? '' : safe === poses.length ? 'all' : safe === 0 ? 'none' : 'some';
       }
+      // Pro round: a power bar replaces the landing ring.
+      const power = el('power');
+      power.hidden = !(state.pro && state.phase === 'aim');
+      if (!power.hidden) {
+        const top = Math.max(THROW.minRange + 1, state.preview.length);
+        const level = state.charging ? (state.charge - THROW.minRange) / (top - THROW.minRange) : 0;
+        el('power-fill').style.transform = `scaleX(${Math.max(0, Math.min(1, level))})`;
+      }
       const share = state.phase === 'aim' ? Math.max(0, state.timeLeft / state.level.seconds) : state.phase === 'intro' ? 1 : 0;
       timerFill.style.transform = `scaleX(${share})`;
       timerFill.classList.toggle('low', state.phase === 'aim' && state.timeLeft <= 3);
@@ -209,9 +218,13 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
 
     showRound(index, level, total) {
       toast.hidden = true;
-      el('banner-kicker').textContent = index === total - 1 ? 'FINAL ROUND: MAP OF THE DAY' : `ROUND ${index + 1} OF ${total}`;
+      const pro = isProRound(index, total);
+      el('banner-kicker').textContent = pro ? 'PRO ROUND: MAP OF THE DAY' : index === total - 1 ? 'FINAL ROUND' : `ROUND ${index + 1} OF ${total}`;
       el('banner-title').textContent = level.title;
-      el('banner-brief').textContent = level.brief;
+      el('banner-brief').textContent = pro ? 'No landing ring. Read the bank, watch the power bar. Worth 1.5x.' : level.brief;
+      hint.innerHTML = pro
+        ? 'PRO ROUND <i></i> POWER BAR ONLY <i></i> 1.5X POINTS'
+        : 'AIM <i></i> HOLD TO POWER UP <i></i> RELEASE TO THROW';
       restartAnimation(banner);
       roundTitle.textContent = level.title;
       pips.querySelectorAll('.pip').forEach((p, i) => p.classList.toggle('now', i === index));
@@ -245,6 +258,12 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       el('toast-points').textContent = `+${result.points.toLocaleString('en-US')}`;
       const chips = el('toast-chips');
       chips.replaceChildren();
+      if (result.pro) {
+        const chip = document.createElement('span');
+        chip.className = 'chip pro';
+        chip.textContent = 'PRO 1.5X';
+        chips.append(chip);
+      }
       if (result.styleBonus > 0) {
         const chip = document.createElement('span');
         chip.className = 'chip';

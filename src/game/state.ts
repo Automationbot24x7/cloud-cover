@@ -16,6 +16,8 @@ export interface RoundResult {
   styleBonus: number;
   saved: number;
   bounces: number;
+  /** Scored under pro-round rules (no landing ring, points multiplied). */
+  pro: boolean;
 }
 
 export interface Puff {
@@ -72,6 +74,8 @@ export interface GameState {
   clock: number;
 
   roundIndex: number;
+  /** The final round of a full run: power bar only, no landing ring, worth more. */
+  pro: boolean;
   /** The six maps of the current run, in order; the last is the Map of the Day. */
   run: Level[];
   level: Level;
@@ -123,7 +127,7 @@ export interface GameState {
 }
 
 /** World units of throw distance gained per second of holding. */
-export const CHARGE_SPEED = 1000;
+export const CHARGE_SPEED = 1150;
 
 /** Seconds each scripted phase lasts. */
 /** The live "% hidden" number shows while charging on this many opening maps, then only the ring and beams. */

@@ -502,13 +502,17 @@ function pathUpTo(path: Vec[], distance: number): Vec[] {
 function drawAimGuide(ctx: CanvasRenderingContext2D, state: GameState): void {
   if (state.phase !== 'aim') return;
   const path = state.preview.path;
-  const full = state.level.assist === 'full';
+  const full = state.level.assist === 'full' && !state.pro;
   const radius = state.level.cloudRadius;
 
   // The planned route. With full assist the whole bank is drawn; otherwise only the
   // first leg and a short stub of the rebound, and the rest is the player's read.
-  if (full || path.length <= 2) {
-    dottedPath(ctx, path, state.clock, COLOR.white, state.charging ? 0.35 : 0.7);
+  if (state.pro) {
+    // Pro round: only the first leg, up to the first wall.
+    dottedPath(ctx, [path[0], path[1]], state.clock, COLOR.white, state.charging ? 0.35 : 0.7);
+  } else if (full || path.length <= 2) {
+    // At most three legs: a long zig-zag preview would cover the whole map.
+    dottedPath(ctx, path.slice(0, 4), state.clock, COLOR.white, state.charging ? 0.35 : 0.7);
   } else {
     dottedPath(ctx, [path[0], path[1]], state.clock, COLOR.white, state.charging ? 0.35 : 0.7);
     const next = path[2];
@@ -532,7 +536,7 @@ function drawAimGuide(ctx: CanvasRenderingContext2D, state: GameState): void {
   }
 
   // Bounce markers on the visible part of the route.
-  const lastMarker = full ? path.length - 1 : Math.min(2, path.length - 1);
+  const lastMarker = state.pro ? 0 : full ? Math.min(3, path.length - 1) : Math.min(2, path.length - 1);
   for (let i = 1; i < lastMarker; i++) {
     const p = path[i];
     ctx.fillStyle = COLOR.amber;
@@ -549,7 +553,7 @@ function drawAimGuide(ctx: CanvasRenderingContext2D, state: GameState): void {
   if (!state.charging) return;
 
   // Live power: a solid line runs out along the route and the ring shows the landing right now.
-  const live = pathUpTo(path, state.charge);
+  const live = state.pro ? [] : pathUpTo(path, state.charge);
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -564,6 +568,7 @@ function drawAimGuide(ctx: CanvasRenderingContext2D, state: GameState): void {
 
   const m = state.marker;
   ctx.save();
+  if (state.pro) ctx.globalAlpha = 0;
   ctx.fillStyle = 'rgba(244, 249, 255, 0.14)';
   ctx.strokeStyle = COLOR.white;
   ctx.lineWidth = 3;

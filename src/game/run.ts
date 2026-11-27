@@ -3,12 +3,23 @@ import type { Level, Tier } from './levels';
 /** The difficulty of each of the six rounds in a run. The last round is the Map of the Day. */
 export const RUN_TIERS: readonly Tier[] = [1, 2, 3, 3, 4, 5];
 
+/** Points multiplier for the pro round. */
+export const PRO_MULTIPLIER = 1.5;
+
+/** True for the last round of a full-length run: the pro round. Short test runs have none. */
+export function isProRound(index: number, total: number): boolean {
+  return total >= RUN_TIERS.length && index === total - 1;
+}
+
 /**
  * Today's par: the score of a sharp run on these maps. Full cover on every map, thrown with half the timer left,
  * and one bank shot on maps from tier 3 (two on the Map of the Day tier), matching the points rules in game.ts.
  */
 export function parFor(run: readonly Level[]): number {
-  return run.reduce((sum, level) => sum + 800 + 100 + 75 * (level.tier >= 5 ? 2 : level.tier >= 3 ? 1 : 0), 0);
+  return run.reduce((sum, level, i) => {
+    const points = 800 + 100 + 75 * (level.tier >= 5 ? 2 : level.tier >= 3 ? 1 : 0);
+    return sum + Math.round(points * (isProRound(i, run.length) ? PRO_MULTIPLIER : 1));
+  }, 0);
 }
 
 /** Today's date in local time as YYYY-MM-DD: the key for the Map of the Day. */

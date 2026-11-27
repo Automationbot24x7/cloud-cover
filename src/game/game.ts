@@ -3,7 +3,7 @@ import type { Coverage, Vec } from '../core/types';
 import { computeCoverage, sampleSegment } from '../core/vision';
 import { chargeTone, sfx } from './audio';
 import { LEVELS, THROW, wallsOf, type Level } from './levels';
-import { RUN_TIERS, dayKey, todaysRun } from './run';
+import { PRO_MULTIPLIER, RUN_TIERS, dayKey, isProRound, todaysRun } from './run';
 import { COLOR } from './render';
 import { CHARGE_SPEED, SQUAD_SIZE, TIMING, type GameState, type Grade, type Puff, type RoundResult, type Runner } from './state';
 
@@ -153,6 +153,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
     phaseTime: 0,
     clock: 0,
     roundIndex: 0,
+    pro: false,
     run: firstRun,
     level: first,
     walls: [],
@@ -217,6 +218,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
   function loadRound(index: number): void {
     const level = state.run[index];
     state.roundIndex = index;
+    state.pro = isProRound(index, state.run.length);
     state.level = level;
     state.walls = wallsOf(level);
     state.samples = samplesFor(level);
@@ -286,7 +288,8 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
       levelId: level.id,
       ratio,
       grade,
-      points: basePoints + timeBonus + styleBonus,
+      points: Math.round((basePoints + timeBonus + styleBonus) * (state.pro ? PRO_MULTIPLIER : 1)),
+      pro: state.pro,
       basePoints,
       timeBonus,
       styleBonus,
@@ -408,9 +411,12 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
             state.chargeDir = 1;
           }
           state.marker = pointAlong(state.preview.path, state.charge).point;
-          state.live = computeCoverage(state.level.watchers, state.samples, state.walls, [
-            { center: state.marker, radius: state.level.cloudRadius },
-          ]);
+          // No live preview in the pro round: the player reads the bank and the power bar alone.
+          state.live = state.pro
+            ? null
+            : computeCoverage(state.level.watchers, state.samples, state.walls, [
+                { center: state.marker, radius: state.level.cloudRadius },
+              ]);
           chargeTone.set((state.charge - THROW.minRange) / (top - THROW.minRange));
         }
         if (state.timeLeft <= 0) {

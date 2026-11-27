@@ -977,3 +977,49 @@ body.r3d #hud::after {
 .summary-par[data-beat='yes'] {
   color: var(--mint);
 }
+
+/* Pro round: the power bar that replaces the landing ring. */
+.power {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--u) * 52);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 16);
+  padding: calc(var(--u) * 8) calc(var(--u) * 18);
+  background: rgba(4, 12, 28, 0.82);
+  font-family: var(--display), sans-serif;
+}
+.power-label {
+  font-weight: 800;
+  font-style: italic;
+  font-size: calc(var(--u) * 26);
+  letter-spacing: 0.08em;
+  color: var(--amber);
+}
+.power-track {
+  position: relative;
+  width: calc(var(--u) * 620);
+  height: calc(var(--u) * 26);
+  background: rgba(155, 182, 220, 0.2);
+  overflow: hidden;
+}
+.power-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--cyan), var(--amber) 70%, var(--coral));
+}
+.power-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--u) * 2);
+  background: rgba(4, 12, 28, 0.7);
+}
+.chip.pro {
+  background: var(--amber);
+  color: #04101f;
+}
