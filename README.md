@@ -18,7 +18,7 @@ Fans in a booth line have a minute or two, no tutorial and one hand on a mouse. 
 - **A short, readable story per throw.** The cloud blooms, "GO!", and your five-person squad runs. Anyone a watcher can still see is caught in a red line and flagged SPOTTED, and the tally shows how many made it.
 - **Six rounds, about 90 seconds**, rising from a straight drop to bank shots off slanted walls with only the first bounce shown.
 - **The same six maps for everyone each day**, drawn by difficulty from a pool of 18 and ending on the **Map of the Day**, so the leaderboard is a fair contest and regulars come back tomorrow.
-- **A night rooftop in 3D**: searchlight turrets whose beams are built from the same ray casts the rules use, so what looks lit is exactly what a watcher can see. Original synthesised sound and adaptive music.
+- **A sunlit sky-deck in 3D**: a floating proving ground above the clouds with a glass edge you bank off, and camera pylons whose orange laser sheets are built from the same ray casts the rules use, so what looks lit is exactly what a watcher can see. Original synthesised sound and adaptive music.
 
 ## Booth-ready
 
