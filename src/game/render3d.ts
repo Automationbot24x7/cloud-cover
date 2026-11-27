@@ -27,7 +27,7 @@ import { raycast, segmentCircleEntry } from '../core/geom';
 import type { Cloud, Segment, Vec } from '../core/types';
 import { ARENA, type Level } from './levels';
 import { squadPoses } from './squad';
-import { TIMING, type GameState } from './state';
+import { LIVE_READOUT_ROUNDS, TIMING, type GameState } from './state';
 
 const CX = 800;
 const CZ = 480;
@@ -1211,8 +1211,9 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       powerRing.position.copy(at(state.level.thrower, 7));
       (powerRing.material as THREE.MeshBasicMaterial).color.set(share > 0.85 ? C.amber : C.cyan);
       powerRing.visible = true;
-      // Live readout beside the landing ring, every round (same as the flat renderer).
-      if (state.live) {
+      // Live readout beside the landing ring on the first two maps only: it teaches what "covered" means,
+      // then the result stays a surprise until the squad runs.
+      if (state.live && state.roundIndex < LIVE_READOUT_ROUNDS) {
         const pct = Math.round(state.live.ratio * 100);
         const edge = project({ x: state.marker.x + r, y: state.marker.y }, 4);
         tag.hidden = false;

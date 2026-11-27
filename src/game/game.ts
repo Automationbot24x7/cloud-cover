@@ -3,7 +3,7 @@ import type { Coverage, Vec } from '../core/types';
 import { computeCoverage, sampleSegment } from '../core/vision';
 import { chargeTone, sfx } from './audio';
 import { LEVELS, THROW, wallsOf, type Level } from './levels';
-import { buildRun, dayKey, hashString, RUN_TIERS, seededRandom } from './run';
+import { RUN_TIERS, dayKey, todaysRun } from './run';
 import { COLOR } from './render';
 import { CHARGE_SPEED, SQUAD_SIZE, TIMING, type GameState, type Grade, type Puff, type RoundResult, type Runner } from './state';
 
@@ -142,7 +142,7 @@ export interface GameOptions {
 function newRun(options: GameOptions): Level[] {
   if (options.maps && options.maps.length) return options.maps;
   const day = dayKey();
-  return buildRun(LEVELS, seededRandom(hashString(`run:${day}`)), day);
+  return todaysRun(LEVELS, day);
 }
 
 export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Game {
@@ -192,6 +192,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
   /** Sound cues already played this round, so each fires once. */
   let goPlayed = false;
   let spottedPlayed = 0;
+  let safePlayed = 0;
 
   function setPhase(phase: GameState['phase']): void {
     state.phase = phase;
@@ -242,6 +243,7 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
     state.blocksHeard = 0;
     goPlayed = false;
     spottedPlayed = 0;
+    safePlayed = 0;
     state.canister = { ...level.thrower };
     lastTick = Math.ceil(level.seconds);
     refreshPreview();
@@ -473,6 +475,14 @@ export function createGame(hooks: GameHooks = {}, options: GameOptions = {}): Ga
         if (spottedNow > spottedPlayed) {
           spottedPlayed = spottedNow;
           sfx.spotted();
+        }
+        // A rising chime for each runner who makes it across (the moment squadPoses marks them arrived).
+        const safeNow = state.runners.filter(
+          (r) => r.stopAt >= 1 && (state.phaseTime - TIMING.runStart - r.delay) / TIMING.runLength > 0.7,
+        ).length;
+        while (safePlayed < safeNow) {
+          sfx.safe(safePlayed);
+          safePlayed += 1;
         }
         if (state.phaseTime >= TIMING.reveal && pending) {
           const result = pending;

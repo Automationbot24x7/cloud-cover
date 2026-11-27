@@ -5,7 +5,7 @@ import smokeAUrl from '../assets/smoke-a.png';
 import smokeBUrl from '../assets/smoke-b.png';
 import type { SightLine, Vec } from '../core/types';
 import { ARENA, WORLD } from './levels';
-import { SQUAD_SIZE, TIMING, type GameState } from './state';
+import { SQUAD_SIZE, TIMING, type GameState, LIVE_READOUT_ROUNDS } from './state';
 
 export const COLOR = {
   bgTop: '#06122a',
@@ -335,7 +335,7 @@ function drawLiveBlocked(ctx: CanvasRenderingContext2D, state: GameState, alpha:
 /** Live "% hidden" readout beside the landing ring while charging. */
 function drawLiveReadout(ctx: CanvasRenderingContext2D, state: GameState): void {
   const live = state.live;
-  if (state.phase !== 'aim' || !state.charging || !live) return;
+  if (state.phase !== 'aim' || !state.charging || !live || state.roundIndex >= LIVE_READOUT_ROUNDS) return;
   const pct = Math.round(live.ratio * 100);
   const m = state.marker;
   const r = state.level.cloudRadius;

@@ -251,6 +251,13 @@ export const voices = {
     }
   },
 
+  /** A runner reaches cover: a short bell that rises with each one, so a clean sweep sounds like a run up a scale. */
+  safe(ctx: Ctx, dest: AudioNode, t: number, index: number): void {
+    const step = [0, 2, 4, 7, 9][Math.min(4, index)];
+    tone(ctx, dest, t, { type: 'triangle', freq: hz(84 + step), peak: 0.07, attack: 0.002, decay: 0.18 });
+    tone(ctx, dest, t, { freq: hz(96 + step), peak: 0.025, attack: 0.002, decay: 0.1 });
+  },
+
   /** A runner is spotted: a short, cutting sting. */
   spotted(ctx: Ctx, dest: AudioNode, t: number): void {
     tone(ctx, dest, t, { type: 'square', freq: hz(84), to: hz(79), peak: 0.06, decay: 0.12 });

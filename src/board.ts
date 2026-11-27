@@ -7,7 +7,7 @@ import './style.css';
 import './board.css';
 
 import { LEVELS } from './game/levels';
-import { dayKey, mapOfTheDay } from './game/run';
+import { dayKey, mapOfTheDay, parFor, todaysRun } from './game/run';
 import { renderBoardRows } from './game/boardRows';
 import { loadToday, onScoresChanged } from './game/store';
 import {
@@ -39,6 +39,9 @@ const resultGrade = document.getElementById('result-grade') as HTMLElement;
 const resultSafe = document.getElementById('result-safe') as HTMLElement;
 const resultPoints = document.getElementById('result-points') as HTMLElement;
 const liveSummary = document.getElementById('live-summary') as HTMLElement;
+const dailyPar = document.getElementById('daily-par') as HTMLElement;
+const callout = document.getElementById('live-callout') as HTMLElement;
+let calloutTimer: number | undefined;
 let newest = 0;
 let view = initialLiveView();
 let animationFrame: number | undefined;
@@ -58,6 +61,35 @@ function paintScores(): void {
 /** Redraws the attract card using today's map. */
 function paintAttract(): void {
   dailyMap.textContent = mapOfTheDay(LEVELS, dayKey()).title;
+  dailyPar.textContent = `TODAY'S PAR ${parFor(todaysRun(LEVELS, dayKey())).toLocaleString('en-US')}`;
+}
+
+/** Flash a broadcast-style callout over the live map so the queue reacts. */
+function flashCallout(text: string, tone: 'gold' | 'mint' | 'cyan'): void {
+  callout.textContent = text;
+  callout.dataset.tone = tone;
+  callout.hidden = false;
+  callout.style.animation = 'none';
+  void callout.offsetWidth;
+  callout.style.animation = '';
+  if (calloutTimer !== undefined) window.clearTimeout(calloutTimer);
+  calloutTimer = window.setTimeout(() => (callout.hidden = true), 2600);
+}
+
+/** Pick the callout a message deserves, if any: new #1 beats on pace beats a clean sweep. */
+function calloutFor(message: LiveMessage, next: LiveView): void {
+  const best = loadToday().reduce((max, e) => Math.max(max, e.score), 0);
+  if (message.type === 'summary') {
+    const par = parFor(todaysRun(LEVELS, dayKey()));
+    if (message.score > best && message.score > 0) flashCallout('NEW #1 TODAY', 'gold');
+    else if (message.score >= par) flashCallout('BEAT PAR', 'mint');
+    return;
+  }
+  if (message.type !== 'result') return;
+  const done = (next.roundIndex ?? 0) + 1;
+  const total = Math.max(1, next.roundTotal);
+  if (best > 0 && done < total && next.totalScore > (best * done) / total) flashCallout('ON PACE FOR #1', 'gold');
+  else if (message.saved >= 5) flashCallout('CLEAN SWEEP 5/5', 'mint');
 }
 
 /** Cancels the live map animation when there is no active run. */
@@ -160,6 +192,7 @@ function paintLive(): void {
 /** Applies a message using its receipt time so the board can expire a stale game window. */
 function receiveLive(message: LiveMessage): void {
   view = reduceLive(view, message, Date.now());
+  calloutFor(message, view);
   if (view.status === 'idle') {
     showAttract();
     return;

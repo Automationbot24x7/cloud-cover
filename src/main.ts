@@ -11,7 +11,7 @@ import { isMuted, setMuted, setQuiet, unlock, updateMusic } from './game/audio';
 import { createGame } from './game/game';
 import { createHud } from './game/hud';
 import { LEVELS, WORLD } from './game/levels';
-import { dayKey, mapOfTheDay } from './game/run';
+import { dayKey, mapOfTheDay, parFor } from './game/run';
 import { createOperatorPanel } from './game/operator';
 import { renderWorld } from './game/render';
 import { createRenderer3D, type Renderer3D } from './game/render3d';
@@ -137,6 +137,7 @@ const fixedMaps = (new URLSearchParams(location.search).get('maps') ?? '')
   .map((id) => LEVELS.find((l) => l.id === id.trim()))
   .filter((l): l is (typeof LEVELS)[number] => !!l);
 const dailyTitle = (): string => (fixedMaps.length ? '' : mapOfTheDay(LEVELS, dayKey()).title);
+const dailyPar = (): number | undefined => (fixedMaps.length ? undefined : parFor(game.state.run));
 
 let lastAimPublish = Number.NEGATIVE_INFINITY;
 let lastFlightPublish = Number.NEGATIVE_INFINITY;
@@ -189,13 +190,14 @@ const game = createGame({
     hud.showResult(result, game.state.roundIndex);
   },
   onSummary: (results, score) => {
+    const par = fixedMaps.length ? undefined : parFor(game.state.run);
     sendLive({
       type: 'summary',
       score,
       saved: results.reduce((total, result) => total + result.saved, 0),
       squad: game.totalRounds * 5,
     });
-    hud.showSummary(results, score);
+    hud.showSummary(results, score, par);
   },
 }, { maps: fixedMaps });
 
@@ -260,7 +262,7 @@ let lastInput = last;
 function resetToAttract(): void {
   game.reset();
   sendLiveIdle();
-  hud.showAttract(dailyTitle());
+  hud.showAttract(dailyTitle(), dailyPar());
 }
 
 for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
@@ -366,7 +368,7 @@ function frame(now: number): void {
   if (!frozen && hud.tick(dt)) {
     game.reset();
     sendLiveIdle();
-    hud.showAttract(dailyTitle());
+    hud.showAttract(dailyTitle(), dailyPar());
   }
   hud.frame(game.state);
   const st = game.state;
@@ -399,7 +401,7 @@ function frame(now: number): void {
 }
 
 resize();
-hud.showAttract(dailyTitle());
+hud.showAttract(dailyTitle(), dailyPar());
 onLiveSnapshotRequest(() => publishLiveSnapshot(liveSnapshot));
 sendLiveIdle();
 registerServiceWorker();

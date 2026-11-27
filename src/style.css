@@ -965,3 +965,15 @@ body.r3d #hud::after {
   from { box-shadow: 0 0 0 rgba(127, 224, 255, 0); }
   to { box-shadow: 0 0 calc(var(--u) * 34) rgba(127, 224, 255, 0.75); }
 }
+
+/* Today's par on the end-of-run card. */
+.summary-par {
+  margin: calc(var(--u) * 6) 0 calc(var(--u) * 4);
+  font-weight: 700;
+  font-size: calc(var(--u) * 20);
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.summary-par[data-beat='yes'] {
+  color: var(--mint);
+}

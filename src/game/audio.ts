@@ -102,6 +102,7 @@ export const sfx = {
   block: (step: number): void => play((c, d, t) => voices.block(c, d, t, step)),
   go: (): void => play(voices.go),
   spotted: (): void => play(voices.spotted),
+  safe: (index: number): void => play((c, d, t) => voices.safe(c, d, t, index)),
   result: (grade: number): void => {
     play((c, d, t) => voices.result(c, d, t, grade));
     if (ctx) music?.duck(ctx.currentTime, 0.7, 0.56, 1500);

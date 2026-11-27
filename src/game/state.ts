@@ -126,6 +126,9 @@ export interface GameState {
 export const CHARGE_SPEED = 1000;
 
 /** Seconds each scripted phase lasts. */
+/** The live "% hidden" number shows while charging on this many opening maps, then only the ring and beams. */
+export const LIVE_READOUT_ROUNDS = 2;
+
 export const TIMING = {
   intro: 1.25,
   bloom: 0.38,

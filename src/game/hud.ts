@@ -42,13 +42,13 @@ export interface Hud {
   /** Flash "TIME'S UP" when the round timer runs out. */
   showTimeUp(): void;
   /** Show the title screen. `dailyTitle` names today's final map. */
-  showAttract(dailyTitle?: string): void;
+  showAttract(dailyTitle?: string, par?: number): void;
   hideAttract(): void;
   showRound(index: number, level: Level, total: number): void;
   showAim(): void;
   showThrow(): void;
   showResult(result: RoundResult, index: number): void;
-  showSummary(results: RoundResult[], score: number): void;
+  showSummary(results: RoundResult[], score: number, par?: number): void;
   /** Advance idle timers. Returns true when the HUD wants the game reset to attract. */
   tick(dt: number): boolean;
   /** Feed a key press to the name entry, if it is open. */
@@ -190,8 +190,9 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       timerFill.classList.toggle('low', state.phase === 'aim' && state.timeLeft <= 3);
     },
 
-    showAttract(dailyTitle) {
-      el('attract-daily').textContent = dailyTitle ? `Today's six maps end on: ${dailyTitle}` : '';
+    showAttract(dailyTitle, par) {
+      const parText = par ? ` · Par ${par.toLocaleString('en-US')}` : '';
+      el('attract-daily').textContent = dailyTitle ? `Today's six maps end on: ${dailyTitle}${parText}` : '';
       summary.hidden = true;
       banner.hidden = true;
       toast.hidden = true;
@@ -261,7 +262,10 @@ export function createHud(actions: HudActions, totalRounds: number): Hud {
       if (pip) pip.className = `pip g${result.grade}`;
     },
 
-    showSummary(results, total) {
+    showSummary(results, total, par) {
+      const parLine = el('summary-par');
+      parLine.textContent = !par ? '' : total >= par ? `BEAT TODAY'S PAR (${par.toLocaleString('en-US')}) BY ${(total - par).toLocaleString('en-US')}` : `TODAY'S PAR ${par.toLocaleString('en-US')}: ${(par - total).toLocaleString('en-US')} TO GO`;
+      parLine.dataset.beat = par && total >= par ? 'yes' : 'no';
       toast.hidden = true;
       banner.hidden = true;
       hint.style.opacity = '0';
