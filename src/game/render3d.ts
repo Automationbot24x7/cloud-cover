@@ -18,9 +18,9 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
-import floorUrl from '../assets/floor.jpg';
-import roofUrl from '../assets/roof.jpg';
-import runnerUrl from '../assets/runner.png';
+import blockTopUrl from '../assets/block-top.jpg';
+import cloudSeaUrl from '../assets/cloud-sea.jpg';
+import skyUrl from '../assets/sky.jpg';
 import smokeAUrl from '../assets/smoke-a.png';
 import smokeBUrl from '../assets/smoke-b.png';
 import { raycast, segmentCircleEntry } from '../core/geom';
@@ -34,8 +34,13 @@ const CZ = 480;
 const EYE_HEIGHT = 46;
 
 const C = {
-  bg: 0x040a18,
-  fog: 0x061026,
+  bg: 0x8fc8f4,
+  fog: 0xcfe6fb,
+  orange: 0xff7a2e,
+  slate: 0x5d6878,
+  alu: 0xd9e1ea,
+  ceramic: 0xf6f4ef,
+  sky: 0x5cb8ff,
   blue: 0x19a7ff,
   cyan: 0x7fe0ff,
   white: 0xf4f9ff,
@@ -69,26 +74,41 @@ function seeded(seed: number): () => number {
   };
 }
 
-/** A tileable facade texture: dark panels with a few lit windows. Drawn in code, so it is original. */
-function windowTexture(seed: number): THREE.CanvasTexture {
-  const rand = seeded(seed);
+/** The deck floor: large warm sand-grey tiles with thin charcoal joints and a faint speckle. Drawn in code. */
+function sandTileTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
-  c.width = 256;
-  c.height = 256;
+  c.width = 512;
+  c.height = 512;
   const g = c.getContext('2d') as CanvasRenderingContext2D;
-  g.fillStyle = '#0d1a33';
-  g.fillRect(0, 0, 256, 256);
-  for (let y = 8; y < 256; y += 32) {
-    for (let x = 6; x < 256; x += 24) {
-      const lit = rand();
-      g.fillStyle =
-        lit > 0.9 ? 'rgba(255, 214, 150, 0.95)' : lit > 0.78 ? 'rgba(127, 224, 255, 0.75)' : 'rgba(40, 70, 120, 0.55)';
-      g.fillRect(x, y, 14, 18);
+  const rand = seeded(33);
+  for (let ty = 0; ty < 2; ty++) {
+    for (let tx = 0; tx < 2; tx++) {
+      const v = 200 + Math.floor(rand() * 10);
+      g.fillStyle = `rgb(${v + 8}, ${v - 4}, ${v - 26})`;
+      g.fillRect(tx * 256, ty * 256, 256, 256);
     }
+  }
+  for (let i = 0; i < 2600; i++) {
+    const v = 150 + Math.floor(rand() * 90);
+    g.fillStyle = `rgba(${v}, ${v - 10}, ${v - 30}, 0.16)`;
+    g.fillRect(rand() * 512, rand() * 512, 1 + rand() * 2.5, 1 + rand() * 2.5);
+  }
+  g.strokeStyle = 'rgba(52, 56, 64, 0.85)';
+  g.lineWidth = 3;
+  for (const x of [0, 256, 512]) {
+    g.beginPath();
+    g.moveTo(x, 0);
+    g.lineTo(x, 512);
+    g.stroke();
+    g.beginPath();
+    g.moveTo(0, x);
+    g.lineTo(512, x);
+    g.stroke();
   }
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -158,7 +178,7 @@ function laneTexture(): THREE.CanvasTexture {
   c.height = 128;
   const g = c.getContext('2d') as CanvasRenderingContext2D;
   g.clearRect(0, 0, 128, 128);
-  g.strokeStyle = 'rgba(127, 224, 255, 0.95)';
+  g.strokeStyle = 'rgba(255, 255, 255, 0.95)';
   g.lineWidth = 10;
   g.lineCap = 'round';
   g.lineJoin = 'round';
@@ -262,11 +282,55 @@ export interface Renderer3D {
   stats(): { geometries: number; textures: number; programs: number };
 }
 
+interface Figurine {
+  group: THREE.Group;
+  mats: THREE.MeshStandardMaterial[];
+  legs: THREE.Mesh[];
+}
+
+/**
+ * A small white ceramic runner with sky-blue trim, built from simple shapes (body, head, cap, waist band, legs).
+ * `overlay` draws it without depth testing so the squad stays visible through the smoke.
+ */
+function makeFigurine(overlay: boolean): Figurine {
+  const ceramic = new THREE.MeshStandardMaterial({ color: C.ceramic, roughness: 0.32, metalness: 0.02 });
+  const trim = new THREE.MeshStandardMaterial({ color: C.sky, roughness: 0.4, metalness: 0.05 });
+  const mats = [ceramic, trim];
+  if (overlay) {
+    for (const m of mats) {
+      m.transparent = true;
+      m.depthTest = false;
+      m.depthWrite = false;
+    }
+  }
+  const group = new THREE.Group();
+  const add = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, order: number): THREE.Mesh => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    m.castShadow = !overlay;
+    if (overlay) m.renderOrder = order;
+    group.add(m);
+    return m;
+  };
+  const legs = [
+    add(new THREE.CapsuleGeometry(3.6, 7, 4, 8), ceramic, 0, 7, -4.6, 9),
+    add(new THREE.CapsuleGeometry(3.6, 7, 4, 8), ceramic, 0, 7, 4.6, 9),
+  ];
+  add(new THREE.CapsuleGeometry(8.5, 12, 6, 12), ceramic, 0, 21, 0, 10);
+  const band = add(new THREE.TorusGeometry(8.7, 2.1, 8, 24), trim, 0, 16, 0, 11);
+  band.rotation.x = Math.PI / 2;
+  add(new THREE.SphereGeometry(10, 18, 14), ceramic, 1, 40, 0, 12);
+  // A small sky-blue cap at the back of the head, so the white figurine still reads from above.
+  const cap = add(new THREE.SphereGeometry(10.6, 18, 8, 0, Math.PI * 2, 0, Math.PI / 4.2), trim, -2, 41, 0, 13);
+  cap.rotation.z = 0.9;
+  return { group, mats, legs };
+}
+
 export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.4;
+  renderer.toneMappingExposure = 0.82;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -275,8 +339,8 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   // A faint studio environment gives the wet floor and metal something to reflect.
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.22;
-  scene.fog = new THREE.Fog(C.fog, 2300, 5600);
+  scene.environmentIntensity = 0.25;
+  scene.fog = new THREE.Fog(C.fog, 2600, 6400);
 
   const camera = new THREE.PerspectiveCamera(30, 16 / 9, 10, 9000);
   // 20 degrees off vertical, close enough that the field fills the space between the top bar and the hint strip.
@@ -287,7 +351,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1600, 900), 0.6, 0.45, 0.86);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1600, 900), 0.12, 0.35, 0.99);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
@@ -302,22 +366,21 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     t.anisotropy = 8;
     return t;
   };
-  const floorTex = tex(floorUrl);
-  floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-  floorTex.repeat.set(ARENA.w / 300, ARENA.h / 300);
-  const roofTex = tex(roofUrl);
-  roofTex.wrapS = roofTex.wrapT = THREE.RepeatWrapping;
-  roofTex.repeat.set(1 / 200, 1 / 200);
-  const runnerTex = tex(runnerUrl);
+  const floorTex = sandTileTexture();
+  floorTex.repeat.set(ARENA.w / 240, ARENA.h / 240);
+  const blockTopTex = tex(blockTopUrl);
+  const skyTex = tex(skyUrl);
+  const cloudSeaTex = tex(cloudSeaUrl);
   const smokeTex = [tex(smokeAUrl), tex(smokeBUrl)];
   const shadowTex = glowTexture('rgba(0,0,0,0.65)', 'rgba(0,0,0,0)');
   const haloTex = glowTexture('rgba(255,255,255,1)', 'rgba(255,255,255,0)');
   const lane = laneTexture();
 
-  // ---------- Lights: cool moonlight and a dark sky; the warm/red accents come from the scene itself. ----------
-  scene.add(new THREE.HemisphereLight(0x6f8fd0, 0x0a1428, 1.25));
-  const moon = new THREE.DirectionalLight(0xbcd6ff, 2.6);
-  moon.position.set(-520, 1100, -420);
+  // ---------- Lights: late-morning sun over a sea of clouds. ----------
+  scene.background = skyTex;
+  scene.add(new THREE.HemisphereLight(0xcfe6ff, 0xd9c9ad, 0.9));
+  const moon = new THREE.DirectionalLight(0xfff1dc, 2.3);
+  moon.position.set(-620, 1250, -520);
   moon.target.position.set(0, 0, 0);
   moon.castShadow = true;
   moon.shadow.mapSize.set(2048, 2048);
@@ -327,170 +390,147 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   sc.top = 600;
   sc.bottom = -600;
   sc.near = 100;
-  sc.far = 3000;
+  sc.far = 3200;
   moon.shadow.bias = -0.0005;
+  moon.shadow.radius = 3;
   scene.add(moon, moon.target);
-  // One warm light against the navy: a sodium street glow from the near side.
-  const warm = new THREE.DirectionalLight(0xffb070, 0.7);
-  warm.position.set(700, 260, 900);
-  scene.add(warm);
   const flashLight = new THREE.AmbientLight(0xdfffee, 0);
   scene.add(flashLight);
 
-  // ---------- Static world: the plaza floor and the city around it. ----------
+  // ---------- Static world: the deck floor, the deck slab, its glass edge and the sky around it. ----------
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(ARENA.w, ARENA.h),
-    new THREE.MeshStandardMaterial({
-      map: floorTex,
-      color: 0x8d9fc6,
-      roughness: 0.62,
-      metalness: 0.12,
-      emissive: 0x1a3566,
-      emissiveMap: floorTex,
-      emissiveIntensity: 0.3,
-    }),
+    new THREE.MeshStandardMaterial({ map: floorTex, color: 0xffffff, roughness: 0.82, metalness: 0.02 }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(ARENA.x + ARENA.w / 2 - CX, 0, ARENA.y + ARENA.h / 2 - CZ);
   floor.receiveShadow = true;
   scene.add(floor);
 
-  const outer = new THREE.Mesh(
-    new THREE.PlaneGeometry(6000, 4000),
-    new THREE.MeshStandardMaterial({ color: 0x050a16, roughness: 1 }),
+  // A sea of clouds far below the deck.
+  const sea = new THREE.Mesh(
+    new THREE.PlaneGeometry(9000, 5200),
+    new THREE.MeshBasicMaterial({ map: cloudSeaTex, color: 0xffffff, fog: false }),
   );
-  outer.rotation.x = -Math.PI / 2;
-  outer.position.y = -6;
-  scene.add(outer);
+  sea.rotation.x = -Math.PI / 2;
+  sea.position.y = -900;
+  scene.add(sea);
 
-  // Glowing curb around the play area.
-  const curbMat = new THREE.MeshStandardMaterial({ color: 0x0f2244, emissive: C.blue, emissiveIntensity: 0.55 });
-  const curb = (w: number, d: number, x: number, z: number): void => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 6, d), curbMat);
-    m.position.set(x, 3, z);
-    scene.add(m);
-  };
   const ax0 = ARENA.x - CX;
   const ax1 = ARENA.x + ARENA.w - CX;
   const az0 = ARENA.y - CZ;
   const az1 = ARENA.y + ARENA.h - CZ;
-  curb(ARENA.w + 8, 4, (ax0 + ax1) / 2, az0);
-  curb(ARENA.w + 8, 4, (ax0 + ax1) / 2, az1);
-  curb(4, ARENA.h + 8, ax0, (az0 + az1) / 2);
-  curb(4, ARENA.h + 8, ax1, (az0 + az1) / 2);
-
-  // A concrete parapet just outside the play area, with a railing, so the roof has an edge.
   {
-    const concrete = concreteTexture();
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x55688a, map: concrete, roughness: 0.85 });
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x6f7f9c, metalness: 0.3, roughness: 0.7, envMapIntensity: 0.05 });
-    const T = 16;
-    const H = 18;
-    const wall = (w: number, d: number, x: number, z: number): void => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, H, d), wallMat);
-      m.position.set(x, H / 2, z);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      scene.add(m);
-    };
-    wall(ARENA.w + 2 * T + 8, T, (ax0 + ax1) / 2, az0 - T / 2 - 4);
-    wall(ARENA.w + 2 * T + 8, T, (ax0 + ax1) / 2, az1 + T / 2 + 4);
-    wall(T, ARENA.h + 8, ax0 - T / 2 - 4, (az0 + az1) / 2);
-    wall(T, ARENA.h + 8, ax1 + T / 2 + 4, (az0 + az1) / 2);
-    const posts: THREE.Vector3[] = [];
-    for (let x = ax0 - 12; x <= ax1 + 12; x += 70) {
-      posts.push(new THREE.Vector3(x, 0, az0 - 12), new THREE.Vector3(x, 0, az1 + 12));
-    }
-    for (let z = az0 + 58; z <= az1 - 12; z += 70) {
-      posts.push(new THREE.Vector3(ax0 - 12, 0, z), new THREE.Vector3(ax1 + 12, 0, z));
-    }
-    const postGeo = new THREE.CylinderGeometry(1.6, 1.6, 22, 6);
-    const postMesh = new THREE.InstancedMesh(postGeo, railMat, posts.length);
-    const m4 = new THREE.Matrix4();
-    posts.forEach((p, i) => {
-      m4.makeTranslation(p.x, H + 11, p.z);
-      postMesh.setMatrixAt(i, m4);
+    // The deck slab: a cream concrete platform the arena sits on.
+    const slabMat = new THREE.MeshStandardMaterial({ color: 0xe8e1d2, roughness: 0.75 });
+    const underMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ae, roughness: 0.9 });
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(ARENA.w + 90, 46, ARENA.h + 90), slabMat);
+    slab.position.set((ax0 + ax1) / 2, -23.5, (az0 + az1) / 2);
+    slab.receiveShadow = true;
+    scene.add(slab);
+    const under = new THREE.Mesh(new THREE.BoxGeometry(ARENA.w + 20, 90, ARENA.h + 20), underMat);
+    under.position.set((ax0 + ax1) / 2, -92, (az0 + az1) / 2);
+    scene.add(under);
+
+    // The bounce wall: a low clear glass barrier with an aluminium rail and a metal kick plate.
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0xd6f1ff,
+      transparent: true,
+      opacity: 0.28,
+      roughness: 0.05,
+      metalness: 0.1,
+      depthWrite: false,
     });
-    scene.add(postMesh);
-    const rail = (w: number, d: number, x: number, z: number): void => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, 2.5, d), railMat);
-      m.position.set(x, H + 22, z);
-      scene.add(m);
+    const railMat = new THREE.MeshStandardMaterial({ color: C.alu, metalness: 0.85, roughness: 0.28 });
+    const H = 34;
+    const T = 6;
+    const edge = (w: number, d: number, x: number, z: number): void => {
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(w, H, d), glassMat);
+      glass.position.set(x, H / 2 + 4, z);
+      glass.renderOrder = 2;
+      scene.add(glass);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(w + 4, 4, d + 4), railMat);
+      rail.position.set(x, H + 6, z);
+      rail.castShadow = true;
+      scene.add(rail);
+      const kick = new THREE.Mesh(new THREE.BoxGeometry(w + 2, 6, d + 2), railMat);
+      kick.position.set(x, 3, z);
+      scene.add(kick);
     };
-    rail(ARENA.w + 24, 2.5, (ax0 + ax1) / 2, az0 - 12);
-    rail(ARENA.w + 24, 2.5, (ax0 + ax1) / 2, az1 + 12);
-    rail(2.5, ARENA.h + 24, ax0 - 12, (az0 + az1) / 2);
-    rail(2.5, ARENA.h + 24, ax1 + 12, (az0 + az1) / 2);
-
-    // The building we are standing on, dropping away below the roof.
-    const facade = windowTexture(2);
-    facade.repeat.set(ARENA.w / 130, 600 / 130);
-    const below = new THREE.Mesh(
-      new THREE.BoxGeometry(ARENA.w + 2 * T + 8, 600, ARENA.h + 2 * T + 8),
-      new THREE.MeshStandardMaterial({ color: 0x0b1630, emissive: 0xffffff, emissiveMap: facade, emissiveIntensity: 0.45 }),
-    );
-    below.position.set((ax0 + ax1) / 2, -306, (az0 + az1) / 2);
-    scene.add(below);
-
-    // Lower neighbouring rooftops between us and the skyline.
-    const rand = seeded(17);
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x1a2742, roughness: 0.9 });
-    for (let i = 0; i < 14; i++) {
-      const w = 260 + rand() * 360;
-      const d = 200 + rand() * 300;
-      const drop = 70 + rand() * 160;
-      const side = i % 4;
-      const x = side < 2 ? -1000 + rand() * 2000 : side === 2 ? ax0 - 80 - w / 2 - rand() * 200 : ax1 + 80 + w / 2 + rand() * 200;
-      const z = side === 0 ? az0 - 90 - d / 2 - rand() * 150 : side === 1 ? az1 + 90 + d / 2 + rand() * 150 : -500 + rand() * 1000;
-      const slab = new THREE.Mesh(new THREE.BoxGeometry(w, 600, d), roofMat);
-      slab.position.set(x, -drop - 300, z);
-      scene.add(slab);
-      const lamp = new THREE.Mesh(new THREE.SphereGeometry(4, 8, 6), new THREE.MeshBasicMaterial({ color: rand() > 0.5 ? C.amber : C.cyan }));
-      lamp.position.set(x + (rand() - 0.5) * w * 0.6, -drop + 6, z + (rand() - 0.5) * d * 0.6);
-      scene.add(lamp);
+    edge(ARENA.w + 2 * T, T, (ax0 + ax1) / 2, az0 - T / 2);
+    edge(ARENA.w + 2 * T, T, (ax0 + ax1) / 2, az1 + T / 2);
+    edge(T, ARENA.h, ax0 - T / 2, (az0 + az1) / 2);
+    edge(T, ARENA.h, ax1 + T / 2, (az0 + az1) / 2);
+    // Posts every few metres so the barrier reads as solid.
+    const postGeo = new THREE.BoxGeometry(5, H + 4, 5);
+    for (let x = ax0; x <= ax1 + 1; x += 150) {
+      for (const z of [az0 - T / 2, az1 + T / 2]) {
+        const post = new THREE.Mesh(postGeo, railMat);
+        post.position.set(x, H / 2 + 4, z);
+        scene.add(post);
+      }
+    }
+    for (let z = az0; z <= az1 + 1; z += 148) {
+      for (const x of [ax0 - T / 2, ax1 + T / 2]) {
+        const post = new THREE.Mesh(postGeo, railMat);
+        post.position.set(x, H / 2 + 4, z);
+        scene.add(post);
+      }
     }
   }
 
-  // A ring of taller buildings outside the play area, for depth and city glow.
+  // The world around the deck: smaller floating platforms, camera drones and a hovering screen.
+  const drones: THREE.Group[] = [];
   {
-    const rand = seeded(9);
-    const facades = [windowTexture(3), windowTexture(5), windowTexture(8)];
-    const skyline = new THREE.Group();
-    for (let i = 0; i < 70; i++) {
-      const side = i % 4;
-      const w = 90 + rand() * 160;
-      const d = 90 + rand() * 160;
-      const h = 160 + rand() * 520;
-      let x: number;
-      let z: number;
-      if (side === 0) {
-        x = -1150 + rand() * 2300;
-        z = az0 - 120 - d / 2 - rand() * 600;
-      } else if (side === 1) {
-        x = -1150 + rand() * 2300;
-        z = az1 + 120 + d / 2 + rand() * 500;
-      } else if (side === 2) {
-        x = ax0 - 120 - w / 2 - rand() * 500;
-        z = -700 + rand() * 1400;
-      } else {
-        x = ax1 + 120 + w / 2 + rand() * 500;
-        z = -700 + rand() * 1400;
+    const platMat = new THREE.MeshStandardMaterial({ color: 0xe3dccd, roughness: 0.8 });
+    const platUnder = new THREE.MeshStandardMaterial({ color: 0xa3abb6, roughness: 0.9 });
+    const platform = (w: number, d: number, x: number, y: number, z: number): void => {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(w, 22, d), platMat);
+      top.position.set(x, y, z);
+      scene.add(top);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(Math.min(w, d) * 0.32, Math.min(w, d) * 0.12, 70, 6), platUnder);
+      base.position.set(x, y - 46, z);
+      scene.add(base);
+    };
+    platform(260, 200, -1080, -160, -640);
+    platform(200, 170, 1120, -230, -560);
+    platform(320, 230, 1080, -140, 640);
+    platform(180, 150, -1140, -260, 560);
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf2f2ee, roughness: 0.4, metalness: 0.2 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x2b313b, roughness: 0.5, metalness: 0.5 });
+    const rotorMat = new THREE.MeshBasicMaterial({ color: 0x8ea0b4, transparent: true, opacity: 0.45 });
+    const makeDrone = (x: number, y: number, z: number): void => {
+      const d = new THREE.Group();
+      d.add(new THREE.Mesh(new THREE.BoxGeometry(34, 10, 22), bodyMat));
+      const lens = new THREE.Mesh(new THREE.SphereGeometry(6, 12, 10), darkMat);
+      lens.position.set(14, -7, 0);
+      d.add(lens);
+      for (const [px, pz] of [[-22, -18], [22, -18], [-22, 18], [22, 18]]) {
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(20, 3, 3), darkMat);
+        arm.position.set(px / 2, 2, pz / 2);
+        arm.rotation.y = Math.atan2(pz, px);
+        d.add(arm);
+        const rotor = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 1, 16), rotorMat);
+        rotor.position.set(px, 5, pz);
+        d.add(rotor);
       }
-      const facade = facades[i % facades.length].clone();
-      facade.needsUpdate = true;
-      facade.repeat.set(w / 120, h / 120);
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x0b1630,
-        emissive: 0xffffff,
-        emissiveMap: facade,
-        emissiveIntensity: 0.55,
-        roughness: 0.9,
-      });
-      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-      b.position.set(x, h / 2 - 6, z);
-      skyline.add(b);
-    }
-    scene.add(skyline);
+      d.position.set(x, y, z);
+      d.userData.base = new THREE.Vector3(x, y, z);
+      scene.add(d);
+      drones.push(d);
+    };
+    makeDrone(-860, 190, -520);
+    makeDrone(900, 230, 420);
+
+    // A hovering blank broadcast screen on a thin frame, angled towards the deck.
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(10, 150, 260), darkMat);
+    frame.position.set(1150, 150, -80);
+    scene.add(frame);
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(240, 132), new THREE.MeshBasicMaterial({ color: 0xbfe4ff }));
+    panel.rotation.y = -Math.PI / 2;
+    panel.position.set(1144, 150, -80);
+    scene.add(panel);
   }
 
   // ---------- Per-level objects. ----------
@@ -499,24 +539,22 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   let laneMesh: THREE.Mesh | null = null;
   let thrower: THREE.Group | null = null;
   let throwerArrow: THREE.Object3D | null = null;
-  let throwerFigure: THREE.Mesh | null = null;
+  let throwerFigure: THREE.Object3D | null = null;
   const rigs: WatcherRig[] = [];
   const beacons: THREE.Mesh[] = [];
 
   const beamFloorMat = new THREE.MeshBasicMaterial({
-    color: C.coral,
+    color: C.orange,
     transparent: true,
-    opacity: 0.2,
-    blending: THREE.AdditiveBlending,
+    opacity: 0.34,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
   const beamVolumeMat = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
-    uniforms: { color: { value: new THREE.Color(C.coral) }, strength: { value: 0.2 } },
+    uniforms: { color: { value: new THREE.Color(C.orange) }, strength: { value: 0.42 } },
     vertexShader: `
       attribute float fade;
       varying float vFade;
@@ -529,13 +567,13 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       uniform float strength;
       varying float vFade;
       void main() {
-        gl_FragColor = vec4(color * strength * vFade, 1.0);
+        gl_FragColor = vec4(color, strength * vFade);
       }`,
   });
 
   // Dim spill: the searchlight's wider glow, fading to nothing a little past the crossing.
   const beamSpillMat = beamVolumeMat.clone();
-  beamSpillMat.uniforms.strength.value = 0.11;
+  beamSpillMat.uniforms.strength.value = 0.16;
 
   /** Textures made for the current level only; released when the next level is built. */
   const levelTextures: THREE.Texture[] = [];
@@ -562,7 +600,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     levelGroup = new THREE.Group();
     levelId = level.id;
 
-    // Buildings: extruded footprints with roof texture on top and lit windows on the sides.
+    // Cover blocks: matte slate with a panelled roof (fitted to each block) and bright aluminium edges.
     const concrete = concreteTexture();
     levelTextures.push(concrete);
     for (const poly of level.blocks) {
@@ -574,77 +612,30 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       side.needsUpdate = true;
       levelTextures.push(side);
       side.repeat.set(1 / 120, 1 / h);
-      const roofMat = new THREE.MeshStandardMaterial({
-        map: roofTex,
-        color: 0xffffff,
-        roughness: 0.7,
-        emissive: 0x2a4a86,
-        emissiveMap: roofTex,
-        emissiveIntensity: 0.7,
-      });
-      const sideMat = new THREE.MeshStandardMaterial({ color: 0x8696b4, map: side, roughness: 0.88 });
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let minY = Infinity;
+      let maxY = -Infinity;
+      for (const q of poly) {
+        minX = Math.min(minX, q.x - CX);
+        maxX = Math.max(maxX, q.x - CX);
+        minY = Math.min(minY, CZ - q.y);
+        maxY = Math.max(maxY, CZ - q.y);
+      }
+      const top = blockTopTex.clone();
+      top.needsUpdate = true;
+      levelTextures.push(top);
+      top.repeat.set(1 / Math.max(1, maxX - minX), 1 / Math.max(1, maxY - minY));
+      top.offset.set(-minX / Math.max(1, maxX - minX), -minY / Math.max(1, maxY - minY));
+      const roofMat = new THREE.MeshStandardMaterial({ map: top, color: 0xffffff, roughness: 0.75 });
+      const sideMat = new THREE.MeshStandardMaterial({ color: C.slate, map: side, roughness: 0.85 });
       const mesh = new THREE.Mesh(geo, [roofMat, sideMat]);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       levelGroup.add(mesh);
-
-      // Rooftop clutter for scale: AC units with fans, a vent and a blinking beacon.
-      {
-        const rand = seeded(Math.round(poly[0].x * 7 + poly[0].y * 3));
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        for (const q of poly) {
-          minX = Math.min(minX, q.x);
-          maxX = Math.max(maxX, q.x);
-          minY = Math.min(minY, q.y);
-          maxY = Math.max(maxY, q.y);
-        }
-        const inside = (x: number, y: number): boolean => {
-          let hit = false;
-          for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-            const pi = poly[i];
-            const pj = poly[j];
-            if (pi.y > y !== pj.y > y && x < ((pj.x - pi.x) * (y - pi.y)) / (pj.y - pi.y) + pi.x) hit = !hit;
-          }
-          return hit;
-        };
-        const unitMat = new THREE.MeshStandardMaterial({ color: 0x8a9bb8, roughness: 0.5, metalness: 0.6 });
-        const fanMat = new THREE.MeshStandardMaterial({ color: 0x20283a, roughness: 0.4, metalness: 0.7 });
-        const count = Math.max(1, Math.round(((maxX - minX) * (maxY - minY)) / 14000));
-        for (let k = 0; k < Math.min(4, count); k++) {
-          const x = minX + 22 + rand() * Math.max(1, maxX - minX - 44);
-          const y = minY + 22 + rand() * Math.max(1, maxY - minY - 44);
-          if (!inside(x, y)) continue;
-          const unit = new THREE.Mesh(new THREE.BoxGeometry(30, 14, 22), unitMat);
-          unit.position.copy(at({ x, y }, h + 7));
-          unit.rotation.y = rand() > 0.5 ? 0 : Math.PI / 2;
-          unit.castShadow = true;
-          levelGroup.add(unit);
-          const fan = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 2, 16), fanMat);
-          fan.position.copy(at({ x, y }, h + 15));
-          levelGroup.add(fan);
-        }
-        const cx = (minX + maxX) / 2;
-        const cy = (minY + maxY) / 2;
-        if (inside(cx, cy)) {
-          const mast = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 26, 6), unitMat);
-          mast.position.copy(at({ x: cx, y: cy }, h + 13));
-          levelGroup.add(mast);
-          const beacon = new THREE.Mesh(
-            new THREE.SphereGeometry(3.5, 10, 8),
-            new THREE.MeshBasicMaterial({ color: C.coral }),
-          );
-          beacon.position.copy(at({ x: cx, y: cy }, h + 27));
-          beacons.push(beacon);
-          levelGroup.add(beacon);
-        }
-      }
-
       const edges = new THREE.LineSegments(
         new THREE.EdgesGeometry(geo, 30),
-        new THREE.LineBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.28 }),
+        new THREE.LineBasicMaterial({ color: C.alu, transparent: true, opacity: 0.85 }),
       );
       levelGroup.add(edges);
     }
@@ -660,7 +651,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     laneTex.repeat.set(len / 60, 1);
     const laneMat = new THREE.MeshBasicMaterial({
       map: laneTex,
-      color: C.cyan,
+      color: 0xffffff,
       transparent: true,
       opacity: 1,
       depthWrite: false,
@@ -672,7 +663,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     levelGroup.add(laneMesh);
     const laneBase = new THREE.Mesh(
       new THREE.PlaneGeometry(len, 64),
-      new THREE.MeshBasicMaterial({ color: C.blue, transparent: true, opacity: 0.24, depthWrite: false }),
+      new THREE.MeshBasicMaterial({ color: C.sky, transparent: true, opacity: 0.78, depthWrite: false }),
     );
     laneBase.rotation.copy(laneMesh.rotation);
     laneBase.position.copy(at(mid, 0.8));
@@ -687,7 +678,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const c = { x: p.x + ux * 38 * dir, y: p.y + uy * 38 * dir };
       const pad = new THREE.Mesh(
         new THREE.BoxGeometry(84, 4, 100),
-        new THREE.MeshStandardMaterial({ color: 0x14233d, emissive: 0x06243f, emissiveIntensity: 0.6, roughness: 0.6, metalness: 0.4 }),
+        new THREE.MeshStandardMaterial({ color: 0x9fb2c6, roughness: 0.55, metalness: 0.2 }),
       );
       pad.rotation.y = -heading + Math.PI / 2;
       pad.position.copy(at(c, 2));
@@ -695,7 +686,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       levelGroup.add(pad);
       const rim = new THREE.LineSegments(
         new THREE.EdgesGeometry(new THREE.BoxGeometry(84, 4, 100)),
-        new THREE.LineBasicMaterial({ color: C.cyan }),
+        new THREE.LineBasicMaterial({ color: C.sky }),
       );
       rim.rotation.copy(pad.rotation);
       rim.position.copy(pad.position);
@@ -706,29 +697,25 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     thrower = new THREE.Group();
     const pad = new THREE.Mesh(
       new THREE.CylinderGeometry(30, 34, 6, 40),
-      new THREE.MeshStandardMaterial({ color: 0x0c2a50, emissive: C.blue, emissiveIntensity: 0.8 }),
+      new THREE.MeshStandardMaterial({ color: 0xf1f4f7, roughness: 0.45, metalness: 0.2 }),
     );
     pad.position.y = 3;
     thrower.add(pad);
     const ringGlow = new THREE.Mesh(
       new THREE.RingGeometry(34, 40, 48),
-      new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: 0.9, depthWrite: false }),
+      new THREE.MeshBasicMaterial({ color: C.sky, transparent: true, opacity: 0.95, depthWrite: false }),
     );
     ringGlow.rotation.x = -Math.PI / 2;
     ringGlow.position.y = 6.5;
     thrower.add(ringGlow);
-    const figure = new THREE.Mesh(
-      new THREE.PlaneGeometry(64, 64),
-      new THREE.MeshBasicMaterial({ map: runnerTex, transparent: true, depthWrite: false }),
-    );
-    figure.rotation.x = -Math.PI / 2;
-    figure.position.y = 8;
-    figure.renderOrder = 4;
+    const figure = makeFigurine(false).group;
+    figure.position.y = 6;
+    figure.scale.setScalar(1.3);
     throwerFigure = figure;
     thrower.add(figure);
     const arrow = new THREE.Mesh(
       new THREE.ConeGeometry(9, 22, 3),
-      new THREE.MeshBasicMaterial({ color: C.white }),
+      new THREE.MeshBasicMaterial({ color: 0x1f7fd6 }),
     );
     arrow.rotation.z = -Math.PI / 2;
     arrow.position.set(44, 8, 0);
@@ -744,22 +731,22 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       group.position.copy(at(w));
       group.scale.setScalar(1.5);
       const base = new THREE.Mesh(
-        new THREE.CylinderGeometry(20, 26, 30, 20),
-        new THREE.MeshStandardMaterial({ color: 0x1c1f2c, roughness: 0.6, metalness: 0.5 }),
+        new THREE.CylinderGeometry(16, 22, 30, 24),
+        new THREE.MeshStandardMaterial({ color: 0xf3f3ef, roughness: 0.35, metalness: 0.15 }),
       );
       base.position.y = 15;
       base.castShadow = true;
       group.add(base);
       const band = new THREE.Mesh(
-        new THREE.TorusGeometry(24, 2.2, 8, 40),
-        new THREE.MeshBasicMaterial({ color: C.coral }),
+        new THREE.TorusGeometry(20, 2, 8, 40),
+        new THREE.MeshBasicMaterial({ color: C.orange }),
       );
       band.rotation.x = Math.PI / 2;
       band.position.y = 4;
       group.add(band);
       const pole = new THREE.Mesh(
         new THREE.CylinderGeometry(4, 5, 22, 10),
-        new THREE.MeshStandardMaterial({ color: 0x3a4258, metalness: 0.7, roughness: 0.35 }),
+        new THREE.MeshStandardMaterial({ color: 0x2f3540, metalness: 0.7, roughness: 0.35 }),
       );
       pole.position.y = 34;
       group.add(pole);
@@ -767,26 +754,26 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       head.position.y = EYE_HEIGHT - 2;
       head.rotation.z = 0;
       const box = new THREE.Mesh(
-        new THREE.BoxGeometry(40, 20, 26),
-        new THREE.MeshStandardMaterial({ color: 0x2a2f42, roughness: 0.5, metalness: 0.6 }),
+        new THREE.BoxGeometry(36, 22, 24),
+        new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.3, metalness: 0.15 }),
       );
       box.castShadow = true;
       head.add(box);
       const eye = new THREE.Mesh(
         new THREE.CylinderGeometry(8, 8, 6, 20),
-        new THREE.MeshStandardMaterial({ color: C.coral, emissive: C.coral, emissiveIntensity: 3 }),
+        new THREE.MeshStandardMaterial({ color: 0x1b1f27, emissive: C.orange, emissiveIntensity: 1.6, roughness: 0.2 }),
       );
       eye.rotation.z = Math.PI / 2;
       eye.position.x = 21;
       head.add(eye);
       const glow = new THREE.Sprite(
-        new THREE.SpriteMaterial({ map: haloTex, color: C.coral, transparent: true, opacity: 0.9, depthWrite: false }),
+        new THREE.SpriteMaterial({ map: haloTex, color: C.orange, transparent: true, opacity: 0.75, depthWrite: false }),
       );
       glow.scale.set(46, 46, 1);
       glow.position.x = 26;
       head.add(glow);
       group.add(head);
-      const light = new THREE.PointLight(C.coral, 3, 260, 1.6);
+      const light = new THREE.PointLight(C.orange, 1.2, 200, 1.6);
       light.position.set(0, EYE_HEIGHT, 0);
       group.add(light);
       levelGroup.add(group);
@@ -800,7 +787,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       beam.renderOrder = 3;
       const scan = new THREE.Mesh(
         new THREE.CylinderGeometry(1.6, 1.6, 1, 8, 1, true),
-        new THREE.MeshBasicMaterial({ color: C.coral, transparent: true, opacity: 0.95 }),
+        new THREE.MeshBasicMaterial({ color: C.orange, transparent: true, opacity: 0.95 }),
       );
       levelGroup.add(floorMesh, beam, scan);
       rigs.push({ spill, group, head, eye, floor: floorMesh, beam, scan, light });
@@ -830,7 +817,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     scene.add(line);
     return line;
   };
-  const routeLine = makeLine(C.white, 3.5, true, 0.85);
+  const routeLine = makeLine(0x1f6fbf, 3.5, true, 0.9);
   const trailMat = new LineMaterial({ linewidth: 7, vertexColors: true, transparent: true, depthWrite: false });
   trailMat.blending = THREE.AdditiveBlending;
   lineMats.push(trailMat);
@@ -839,7 +826,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   trail.visible = false;
   trail.renderOrder = 5;
   scene.add(trail);
-  const chargeLine = makeLine(C.cyan, 6, false);
+  const chargeLine = makeLine(0x1f8fe0, 6, false);
   const stubLine = makeLine(C.amber, 5, false, 0.9);
 
   const setLine = (line: Line2, pts: Vec[], h: number): void => {
@@ -868,14 +855,14 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
 
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.94, 1, 72),
-    new THREE.MeshBasicMaterial({ color: C.white, transparent: true, opacity: 0.9, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: 0x1f6fbf, transparent: true, opacity: 0.9, depthWrite: false }),
   );
   ring.rotation.x = -Math.PI / 2;
   ring.visible = false;
   scene.add(ring);
   const ringFill = new THREE.Mesh(
     new THREE.CircleGeometry(1, 72),
-    new THREE.MeshBasicMaterial({ color: C.white, transparent: true, opacity: 0.1, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: 0x5cb8ff, transparent: true, opacity: 0.18, depthWrite: false }),
   );
   ringFill.rotation.x = -Math.PI / 2;
   ringFill.visible = false;
@@ -909,7 +896,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
   const SMOKE_LAYERS = 1;
   const toon = toonRamp();
   const puffGeos = [lumpySphere(1), lumpySphere(2), lumpySphere(3)];
-  const puffMat = new THREE.MeshToonMaterial({ color: 0xdfe9f6, gradientMap: toon, emissive: 0x1b2a44 });
+  const puffMat = new THREE.MeshToonMaterial({ color: 0xf2f7ff, gradientMap: toon, emissive: 0x2a4670, emissiveIntensity: 0.35 });
   // A faint blue rim on the smoke's silhouette, so it sits in the night scene and matches the title art.
   puffMat.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -954,29 +941,23 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
     }
   };
 
-  // Runners: textured cards lying just above the ground, with a blob shadow and a halo when spotted.
-  const runners: { card: THREE.Mesh; shadow: THREE.Mesh; halo: THREE.Mesh }[] = [];
+  // Runners: ceramic figurines, drawn over the smoke so the squad stays visible (faint while hidden inside it).
+  const runners: { fig: Figurine; shadow: THREE.Mesh; halo: THREE.Mesh }[] = [];
   for (let i = 0; i < 5; i++) {
-    const card = new THREE.Mesh(
-      new THREE.PlaneGeometry(88, 88),
-      new THREE.MeshBasicMaterial({ map: runnerTex, transparent: true, depthWrite: false }),
-    );
-    // Drawn after the smoke and without depth test, so the player can always see the squad:
-    // faint while hidden inside the cloud, solid in the open.
-    card.renderOrder = 9;
-    (card.material as THREE.MeshBasicMaterial).depthTest = false;
+    const fig = makeFigurine(true);
+    fig.group.scale.setScalar(1.55);
     const shadow = new THREE.Mesh(
-      new THREE.CircleGeometry(28, 24),
+      new THREE.CircleGeometry(22, 24),
       new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }),
     );
     shadow.rotation.x = -Math.PI / 2;
     const halo = new THREE.Mesh(
-      new THREE.CircleGeometry(34, 32),
-      new THREE.MeshBasicMaterial({ color: C.coral, transparent: true, opacity: 0.6, depthWrite: false }),
+      new THREE.CircleGeometry(30, 32),
+      new THREE.MeshBasicMaterial({ color: C.coral, transparent: true, opacity: 0.55, depthWrite: false }),
     );
     halo.rotation.x = -Math.PI / 2;
-    scene.add(shadow, halo, card);
-    runners.push({ card, shadow, halo });
+    scene.add(shadow, halo, fig.group);
+    runners.push({ fig, shadow, halo });
   }
 
   // A "% hidden" tag beside the landing ring, as an overlay positioned from the 3D scene.
@@ -1133,7 +1114,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       rig.scan.visible = showBeams && (state.phase === 'aim' || state.phase === 'intro' || state.phase === 'attract');
       rig.head.rotation.y = -Math.atan2(target.y - w.y, target.x - w.x);
       const pulse = 0.75 + 0.25 * Math.sin(state.clock * 6 + i);
-      (rig.eye.material as THREE.MeshStandardMaterial).emissiveIntensity = 2.5 + pulse;
+      (rig.eye.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.2 + pulse;
     });
   }
 
@@ -1143,7 +1124,7 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       const t = state.level.thrower;
       const aimAngle = Math.atan2(state.aim.y - t.y, state.aim.x - t.x);
       throwerArrow.rotation.y = -aimAngle;
-      if (throwerFigure) throwerFigure.rotation.z = -(aimAngle + Math.PI / 2);
+      if (throwerFigure) throwerFigure.rotation.y = -aimAngle;
       throwerArrow.visible = aiming || state.phase === 'intro';
       you.hidden = !(aiming || state.phase === 'intro');
       if (!you.hidden) {
@@ -1377,14 +1358,16 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
       }
       const r = runners[i];
       const show = state.phase !== 'summary' && state.phase !== 'attract';
-      r.card.visible = r.shadow.visible = show;
+      r.fig.group.visible = r.shadow.visible = show;
       const bob = p.running ? Math.abs(Math.sin(state.clock * 16 + i)) * 4 : 0;
-      r.card.position.copy(at(p, 3 + p.hop + bob));
+      r.fig.group.position.copy(at(p, 1 + p.hop + bob));
       const stride = p.running ? Math.sin(state.clock * 18 + i * 1.7) : 0;
-      r.card.rotation.set(-Math.PI / 2, 0, -(p.heading + Math.PI / 2) + stride * 0.16);
-      r.card.scale.set(1 - Math.abs(stride) * 0.06, 1 + Math.abs(stride) * 0.08, 1);
-      (r.card.material as THREE.MeshBasicMaterial).opacity = p.spotted ? 1 : hidden ? 0.45 : p.alpha;
-      (r.card.material as THREE.MeshBasicMaterial).color.set(p.spotted ? 0xffb0b8 : 0xffffff);
+      r.fig.group.rotation.set(0, -p.heading, stride * 0.12);
+      r.fig.legs[0].rotation.z = stride * 0.7;
+      r.fig.legs[1].rotation.z = -stride * 0.7;
+      const opacity = p.spotted ? 1 : hidden ? 0.45 : p.alpha;
+      r.fig.mats[0].opacity = r.fig.mats[1].opacity = opacity;
+      r.fig.mats[0].color.set(p.spotted ? 0xffb3ba : C.ceramic);
       r.shadow.position.copy(at({ x: p.x + 4, y: p.y + 6 }, 0.5));
       r.halo.visible = show && p.spotted;
       r.halo.position.copy(at(p, 1));
@@ -1491,6 +1474,11 @@ export function createRenderer3D(canvas: HTMLCanvasElement): Renderer3D {
         if (map) map.offset.x = -state.clock * 0.9;
       }
       beacons.forEach((b, i) => (b.visible = Math.sin(state.clock * 3 + i * 1.9) > 0.2));
+      drones.forEach((d, i) => {
+        const base = d.userData.base as THREE.Vector3;
+        d.position.set(base.x + Math.sin(state.clock * 0.25 + i * 2) * 60, base.y + Math.sin(state.clock * 1.4 + i) * 8, base.z);
+        d.rotation.y = Math.sin(state.clock * 0.3 + i) * 0.5;
+      });
       updateWatchers(state);
       updateAim(state);
       updateCanister(state);
